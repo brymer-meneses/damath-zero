@@ -1,0 +1,14 @@
+[project]
+authors = ["Brymer Meneses <68867487+brymer-meneses@users.noreply.github.com>"]
+channels = ["conda-forge", "https://conda.modular.com/max", "https://repo.prefix.dev/modular-community"]
+description = "Add a short description here"
+name = "damath-zero"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+main = "mojo src/main.mojo"
+
+
+[dependencies]
+max = ">=24.6.0,<25"
