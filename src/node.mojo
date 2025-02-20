@@ -1,7 +1,8 @@
 from memory import UnsafePointer
-import math
-
+from storage import Storage, StorageId
 from game import Player, ActionId
+
+import math
 
 @value
 struct NodeData:
@@ -13,35 +14,21 @@ struct NodeData:
   var children: List[NodeId]
   
 
-  fn __init__(inout self, prior: Float64, action_taken: ActionId) -> None:
+  fn __init__(mut self,  action_taken: ActionId, played_by: Player=Player.first(), prior: Float64=0) -> None:
     self.visit_count = 0
     self.value_sum = 0
     self.prior = prior
+    self.played_by = played_by
     self.children = List[NodeId]()
-    self.played_by = Player.first()
     self.action_taken = action_taken
 
-  fn __init__(inout self, action_taken: ActionId) -> None:
-    self.visit_count = 0
-    self.value_sum = 0
-    self.prior = 0
-    self.children = List[NodeId]()
-    self.played_by = Player.first()
-    self.action_taken = action_taken
-
-  fn mean_action_value(self) -> Float64:
-    if self.visit_count == 0:
-      return 0
-    return self.value_sum / self.visit_count
-
-  fn is_expanded(self) -> Bool:
+  fn is_expanded(ref self) -> Bool:
     return len(self.children) > 0
+
 
 @value
 @register_passable("trivial")
-struct NodeId:
-  alias Invalid = NodeId(-1)
-
+struct NodeId(StorageId):
   var index: Int
 
   fn __init__(inout self, index: Int) -> None:
@@ -49,19 +36,8 @@ struct NodeId:
 
   fn is_valid(self) -> Bool:
     return self.index != -1
+  fn value(self) -> Int:
+    return self.index
 
-struct NodeStorage:
-  var data: List[NodeData]
+alias NodeStorage = Storage[NodeData, NodeId]
 
-  fn __init__(inout self) -> None:
-    self.data = List[NodeData]()
-
-  fn __getitem__(ref self, node_id: NodeId) -> ref[self.data] NodeData:
-    debug_assert(node_id.is_valid())
-
-    return self.data[node_id.index]
-
-  fn new(mut self, prior: Float64, action_taken: ActionId) -> ref[self.data] NodeData:
-    self.data.append(NodeData(prior, action_taken))
-    return self.data[-1]
-    
