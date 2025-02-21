@@ -31,11 +31,16 @@ struct NodeData:
 struct NodeId(StorageId):
   var index: Int
 
-  fn __init__(inout self, index: Int) -> None:
+  fn __init__(mut self, index: Int) -> None:
     self.index = index
+
+  @staticmethod
+  fn invalid() -> NodeId:
+    return NodeId(-1)
 
   fn is_valid(self) -> Bool:
     return self.index != -1
+
   fn value(self) -> Int:
     return self.index
 

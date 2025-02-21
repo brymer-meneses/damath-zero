@@ -8,14 +8,14 @@ struct Player:
 
   @staticmethod
   fn first() -> Player:
-    return Player { __is_first: True}
+    return Player(False)
 
   @staticmethod
   fn second() -> Player:
-    return Player { __is_first: False}
+    return Player(True)
 
   fn next(self) -> Player:
-    return Player { __is_first: not self.__is_first}
+    return Player(not self.__is_first)
 
   fn __eq__(self, other: Player) -> Bool:
     return self.__is_first == other.__is_first
@@ -32,10 +32,13 @@ struct ActionId:
 
   @staticmethod
   fn invalid() -> ActionId:
-    return ActionId { __value: -1}
+    return ActionId(-1)
 
   fn value(self) -> Int:
-      return self.__value
+    return self.__value
+  
+  fn is_valid(self) -> Bool:
+    return self.__value != -1
 
   fn __eq__(self, other: ActionId) -> Bool:
     return self.__value == other.__value
@@ -43,7 +46,11 @@ struct ActionId:
 trait Game:
   fn clone(self) -> Game: ...
 
+
   fn __moveinit__(out self, owned existing: Self):
+    ...
+
+  fn get_history(self) -> List[ActionId]:
     ...
 
   fn get_valid_moves(ref self) -> ref[self] List[ActionId]:

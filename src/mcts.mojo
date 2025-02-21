@@ -1,5 +1,6 @@
 from node import NodeStorage, NodeId, NodeData
-from game import Game, ActionId
+from game import Game, ActionId, Player
+from network import Network
 from max.tensor import Tensor
 
 import math
@@ -10,60 +11,53 @@ struct Config:
   var c_base: Float64
   var c_init: Float64
   var num_simulations: Int
+  var num_sampling_moves: Int
 
-  fn __init__(mut self, 
-              num_simulations: Int,
-              c_base: Float64, 
-              c_init: Float64) -> None:
 
-    self.c_base = c_base
-    self.c_init = c_init
-    self.num_simulations = num_simulations
-
-trait Network(Copyable):
-  fn inference(self, input: Tensor[DType.float64]) -> (Float64, Tensor[DType.float64]): 
-    ...
-
-struct MCTS[Game: Game, Network: Network]:
+struct MCTS[Network: Network]:
   var storage: NodeStorage
   var network: Network
   var config: Config
-  var game: Game
 
-  fn __init__(mut self, config: Config, owned game: Game, ref network: Network):
-    self.storage = NodeStorage()
+  fn __init__(mut self, config: Config, ref network: Network):
     self.config = config
-    self.game = game^
-    self.network = network
+    self.network = network.copy()
+    self.storage = NodeStorage()
 
-  fn run(mut self) -> None:
+  fn run(mut self, owned game: Game) -> NodeId:
     var root = self.storage.push(NodeData(ActionId.invalid(), prior=0))
-    var value = self.expand_node(root)
+    _ = self.expand_node(game, root)
 
     for _ in range(self.config.num_simulations):
-      var node = root
-      var game = self.game.clone()
-      var path = List[NodeId]()
+      var node_id = root
+      var scratch_game = game.clone()
+      var search_path = List[NodeId](node_id)
 
-      while self.storage[node].is_expanded():
-        pass
-      pass
+      while self.storage[node_id].is_expanded():
+        node_id = self.select_highest_ucb_score(node_id)
+        var action_id = self.storage[node_id].action_taken
+        scratch_game.apply_action(action_id)
+        search_path.append(node_id)
 
-  fn expand_node(mut self, node_id: NodeId) -> Float64:
-    var legal_actions = self.game.get_valid_moves()
-    var inference = self.network.inference(self.game.make_image())
+      var value = self.expand_node(scratch_game, node_id)
+      self.backpropagate(search_path, value, scratch_game.to_play())
+
+    return self.select_highest_visit_count(root)
+
+  fn expand_node(mut self, read game: Game, node_id: NodeId) -> Float64:
+    var legal_actions = game.get_valid_moves()
+    var inference = self.network.inference(game.make_image())
 
     var value = inference[0]
     var policy = inference[1]
 
-    var node = self.storage[node_id];
+    var node = self.storage[node_id]
     var player = node.played_by.next()
     
     for action in legal_actions:
       var action_id = action[]
-      var child = self.storage.push(NodeData(action_id,  played_by=player, prior=policy[action_id.value()]))
-      node.children.append(child)
-      
+      var child_id = self.storage.push(NodeData(action_id,  played_by=player, prior=policy[action_id.value()]))
+      node.children.append(child_id)
     return value
 
   fn compute_ucb_score(self, parent_id: NodeId, child_id: NodeId) -> Float64:
@@ -78,9 +72,31 @@ struct MCTS[Game: Game, Network: Network]:
 
     return prior_score + value_score
 
-  fn select_action(self, root: NodeId) -> ActionId:
-    return ActionId(-1)
+  fn select_highest_visit_count(self, parent_id: NodeId) -> NodeId:
+    var max_visit_count = 0
+    var best_child_id = NodeId.invalid()
+    for child_id in self.storage[parent_id].children:
+      var child = self.storage[child_id[]]
+      if child.visit_count > max_visit_count:
+        max_visit_count = child.visit_count
+        best_child_id = child_id[]
+    return best_child_id
 
-  fn select_child(self, node_id: NodeId) -> NodeId:
-    return NodeId(-1)
+  fn select_highest_ucb_score(self, parent_id: NodeId) -> NodeId:
+    var best_child_id = NodeId.invalid()
+    var best_ucb_score = 0.0
+    var parent = self.storage[parent_id]
 
+    for child_id in parent.children:
+      var ucb_score = self.compute_ucb_score(parent_id, child_id[]) 
+      if ucb_score > best_ucb_score:
+        best_child_id = child_id[]
+    return best_child_id
+
+  fn backpropagate(self, path: List[NodeId], value: Float64, played_by: Player):
+    for node_id in path:
+      var node = self.storage[node_id[]]
+      if node.played_by == played_by:
+        node.value_sum += value
+      else:
+        node.value_sum += (1-value)

@@ -1,6 +1,6 @@
 
-trait StorageId(Copyable, Movable):
-  fn __init__(inout self: Self, value: Int) -> None: ...
+trait StorageId(CollectionElement):
+  fn __init__(mut self: Self, value: Int) -> None: ...
   fn is_valid(self) -> Bool: ...
   fn value(self) -> Int: ... 
 
@@ -8,7 +8,7 @@ trait StorageId(Copyable, Movable):
 struct Storage[Element: CollectionElement, ElementId: StorageId]:
   var data: List[Element]
 
-  fn __init__(inout self) -> None:
+  fn __init__(mut self) -> None:
     self.data = List[Element]()
 
   fn __getitem__(ref self, id: ElementId) -> ref[self.data] Element:
@@ -18,4 +18,3 @@ struct Storage[Element: CollectionElement, ElementId: StorageId]:
   fn push(mut self, owned data: Element) -> ElementId:
     self.data.append(data)
     return ElementId(len(self.data)-1)
-    
