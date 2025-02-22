@@ -1,18 +1,14 @@
 
 from max.tensor import Tensor
+from index import IndexBase
 
 @value
 @register_passable("trivial")
 struct Player:
   var __is_first: Bool 
 
-  @staticmethod
-  fn first() -> Player:
-    return Player(False)
-
-  @staticmethod
-  fn second() -> Player:
-    return Player(True)
+  alias First = Self(True)
+  alias Second = Self(False)
 
   fn next(self) -> Player:
     return Player(not self.__is_first)
@@ -21,31 +17,10 @@ struct Player:
     return self.__is_first == other.__is_first
 
 
-@value
-@register_passable("trivial")
-struct ActionId:
-  """
-  Generic identifier for an action or a move of a game. Games that implement
-  the `Game` trait are responsible for decoding and encoding this information.
-  """
-  var __value: Int
-
-  @staticmethod
-  fn invalid() -> ActionId:
-    return ActionId(-1)
-
-  fn value(self) -> Int:
-    return self.__value
-  
-  fn is_valid(self) -> Bool:
-    return self.__value != -1
-
-  fn __eq__(self, other: ActionId) -> Bool:
-    return self.__value == other.__value
+alias ActionId = IndexBase["ActionId"]
 
 trait Game:
   fn clone(self) -> Game: ...
-
 
   fn __moveinit__(out self, owned existing: Self):
     ...

@@ -1,11 +1,13 @@
 from memory import UnsafePointer
-from storage import Storage, StorageId
+from storage import Storage
 from game import Player, ActionId
+
+from index import IndexBase
 
 import math
 
 @value
-struct NodeData:
+struct Node:
   var visit_count: Int
   var prior: Float64
   var value_sum: Float64
@@ -14,7 +16,7 @@ struct NodeData:
   var children: List[NodeId]
   
 
-  fn __init__(mut self,  action_taken: ActionId, played_by: Player=Player.first(), prior: Float64=0) -> None:
+  fn __init__(mut self,  action_taken: ActionId, played_by: Player=Player.First, prior: Float64=0) -> None:
     self.visit_count = 0
     self.value_sum = 0
     self.prior = prior
@@ -25,24 +27,13 @@ struct NodeData:
   fn is_expanded(ref self) -> Bool:
     return len(self.children) > 0
 
+  fn mean_value_score(read self) -> Float64:
+    if self.visit_count == 0:
+      return 0
+    return self.value_sum / self.visit_count
 
-@value
-@register_passable("trivial")
-struct NodeId(StorageId):
-  var index: Int
 
-  fn __init__(mut self, index: Int) -> None:
-    self.index = index
+alias NodeId = IndexBase["NodeId"]
 
-  @staticmethod
-  fn invalid() -> NodeId:
-    return NodeId(-1)
-
-  fn is_valid(self) -> Bool:
-    return self.index != -1
-
-  fn value(self) -> Int:
-    return self.index
-
-alias NodeStorage = Storage[NodeData, NodeId]
+alias NodeStorage = Storage[Node, NodeId]
 

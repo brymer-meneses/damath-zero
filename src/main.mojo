@@ -1,6 +1,4 @@
 
-
-
 fn main() -> None:
-  print("Hello world!")
+  print("hello world!")
   return

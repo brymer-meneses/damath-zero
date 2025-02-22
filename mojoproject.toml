@@ -11,4 +11,4 @@ main = "mojo src/main.mojo"
 
 
 [dependencies]
-max = ">=24.6.0,<25"
+max = ">=25, <26"
