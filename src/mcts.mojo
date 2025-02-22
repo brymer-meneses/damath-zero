@@ -73,7 +73,7 @@ struct MCTS[Network: Network]:
 
     return prior_score + value_score
 
-  fn select_highest_visit_count(self, parent_id: NodeId) -> NodeId:
+  fn select_highest_visit_count(read self, parent_id: NodeId) -> NodeId:
     var max_visit_count = 0
     var best_child_id = NodeId.Invalid
     for child_id in self.nodes.get(parent_id).children:
@@ -83,7 +83,7 @@ struct MCTS[Network: Network]:
         best_child_id = child_id[]
     return best_child_id
 
-  fn select_highest_score(self, parent_id: NodeId) -> NodeId:
+  fn select_highest_score(read self, parent_id: NodeId) -> NodeId:
     var best_child_id = NodeId.Invalid
     var best_score = 0.0
     var parent = self.nodes.get(parent_id)
@@ -95,7 +95,7 @@ struct MCTS[Network: Network]:
         best_child_id = child_id[]
     return best_child_id
 
-  fn backpropagate(self, path: List[NodeId], value: Float64, played_by: Player):
+  fn backpropagate(mut self, path: List[NodeId], value: Float64, played_by: Player):
     for node_id in path:
       var node = self.nodes.get(node_id[])
       if node.played_by == played_by:

@@ -8,7 +8,9 @@ version = "0.1.0"
 
 [tasks]
 main = "mojo src/main.mojo"
+server = "mojo src/server/main.mojo"
 
 
 [dependencies]
 max = ">=25, <26"
+flask = ">=3.1.0,<4"
