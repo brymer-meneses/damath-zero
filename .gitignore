@@ -1,7 +1,3 @@
 
-__pycache__
-# pixi environments
-.pixi
-*.egg-info
-# magic environments
-.magic
+build/
+.cache/
