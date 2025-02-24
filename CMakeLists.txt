@@ -4,10 +4,11 @@ project(damath-zero LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 
+include(FetchContent) 
 
-# TODO: Use FetchContent for downloading torch
-# include(FetchContent) 
-find_package(Torch REQUIRED)
+include(cmake/fmt.cmake)
+include(cmake/googletest.cmake)
+include(cmake/torch.cmake)
 
 include_directories(.)
 
