@@ -1,0 +1,11 @@
+service DamathZero {
+  rpc Predict (GameState) returns (GameAction) {}
+}
+
+message GameState {
+  required string name = 1;
+}
+
+message GameAction {
+  required string message = 1;
+}

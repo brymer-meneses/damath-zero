@@ -1,38 +1,23 @@
 cmake_minimum_required(VERSION 3.31)
 project(damath-zero LANGUAGES CXX)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 23)
+include(FetchContent)
 
-include(FetchContent) 
-
-include(cmake/fmt.cmake)
-include(cmake/googletest.cmake)
+include(cmake/grpc.cmake)
+include(cmake/protobuf.cmake)
 include(cmake/torch.cmake)
 
-include_directories(.)
+add_library(damath-zero)
+target_sources(damath-zero PRIVATE damath-zero/core/mcts.cpp)
+target_compile_features(damath-zero PRIVATE cxx_std_23)
+target_include_directories(damath-zero PUBLIC .)
+target_link_libraries(damath-zero PUBLIC ${TORCH_LIBRARIES})
 
-add_library(base 
-  damath-zero/base/types.h
-  damath-zero/base/storage.h
-  damath-zero/base/id.h
-)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS damath-zero.proto)
+add_library(damath-zero-proto ${PROTO_SRCS} ${PROTO_HDRS})
+target_link_libraries(damath-zero-proto PUBLIC ${Protobuf_LIBRARIES})
 
-add_library(core
-  damath-zero/core/mcts.cpp
-  damath-zero/core/mcts.h
-  damath-zero/core/network.h
-  damath-zero/core/node.h
-  damath-zero/core/game.h
-)
-
-set_target_properties(core PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(base PROPERTIES LINKER_LANGUAGE CXX)
-
-add_executable(server damath-zero/server/main.cpp)
-
-target_include_directories(core PUBLIC ${TORCH_INCLUDE_DIRS})
-target_link_libraries(core PUBLIC ${TORCH_LIBRARY})
-
-target_link_libraries(server PRIVATE core base)
-
+add_executable(server)
+target_sources(server PRIVATE damath-zero/server/main.cpp)
+target_compile_features(server PRIVATE cxx_std_23)
+target_link_libraries(server PRIVATE damath-zero damath-zero-proto)
