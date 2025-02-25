@@ -1,5 +1,7 @@
+package damath_zero;
+
 service DamathZero {
-  rpc Predict (GameState) returns (GameAction) {}
+  rpc predict(GameState) returns (GameAction) {}
 }
 
 message GameState {
