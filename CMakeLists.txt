@@ -4,6 +4,7 @@ project(damath-zero LANGUAGES CXX)
 include(FetchContent)
 include(cmake/torch.cmake)
 include(cmake/httplib.cmake)
+include(cmake/gtest.cmake)
 
 add_library(damath-zero)
 target_compile_features(damath-zero PRIVATE cxx_std_23)
@@ -19,3 +20,19 @@ target_link_libraries(damath-zero-server PRIVATE damath-zero httplib::httplib)
 add_custom_command(TARGET damath-zero-server PRE_BUILD 
   COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/damath-zero/app $<TARGET_FILE_DIR:damath-zero-server>)
+
+# Tests
+enable_testing()
+
+add_executable(test_runner 
+  tests/test_base.cpp
+  tests/test_mcts.cpp
+)
+
+target_compile_features(test_runner PRIVATE cxx_std_23)
+target_link_libraries(test_runner damath-zero GTest::gtest_main)
+target_include_directories(test_runner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${GTEST_INCLUDE_DIRS})
+
+include(GoogleTest)
+gtest_discover_tests(test_runner)
+
