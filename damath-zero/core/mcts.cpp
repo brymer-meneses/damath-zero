@@ -48,6 +48,7 @@ auto MCTS::select_highest_visit_count(NodeId parent_id) const -> NodeId {
   const auto& parent = nodes_.get(parent_id);
   assert(parent.children.size() > 0);
 
+  // TODO: do something different if game.history is not sufficient
   return *std::max_element(parent.children.begin(), parent.children.end(),
                            [this](const NodeId n1, const NodeId n2) {
                              return nodes_.get(n1).visit_count <

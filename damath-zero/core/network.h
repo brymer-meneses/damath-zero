@@ -9,21 +9,22 @@ namespace DamathZero::Core {
 
 template <typename N>
 concept Network = requires(N n, torch::Tensor t) {
-  { n.inference(t) } -> std::same_as<std::pair<f64, torch::Tensor>>;
+  { n.inference(t) } -> std::same_as<torch::Tensor>;
 };
 
+// TODO: this should use mutexes to avoid data races
 template <Network Network>
 class NetworkStorage {
  public:
-  auto get_latest_network() const -> Network&;
-  auto save_network() -> void;
+  auto get_latest() const -> Network&;
+  auto save(u32 id, Network network) -> void;
 
  private:
-  std::vector<Network> networks_;
+  std::vector<std::pair<u32, Network>> networks_;
 };
 
 template <Network Network>
-auto NetworkStorage<Network>::get_latest_network() const -> Network& {
+auto NetworkStorage<Network>::get_latest() const -> Network& {
   if (networks_.size() > 0) {
   }
 
@@ -31,7 +32,9 @@ auto NetworkStorage<Network>::get_latest_network() const -> Network& {
 }
 
 template <Network Network>
-auto NetworkStorage<Network>::save_network() -> void {}
+auto NetworkStorage<Network>::save(u32 id, Network network) -> void {
+  networks_.push_back({id, network});
+}
 
 }  // namespace DamathZero::Core
 

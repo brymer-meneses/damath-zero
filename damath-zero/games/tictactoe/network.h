@@ -9,7 +9,7 @@ namespace DamathZero::Games {
 
 class TicTacToeNetwork {
  public:
-  auto inference(torch::Tensor t) -> std::pair<f64, torch::Tensor>;
+  auto inference(torch::Tensor t) -> torch::Tensor;
 };
 
 static_assert(Core::Network<TicTacToeNetwork>);

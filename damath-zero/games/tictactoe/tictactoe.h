@@ -17,6 +17,7 @@ class TicTacToe {
   auto apply(Core::ActionId id) -> void;
 
   auto make_image() -> torch::Tensor;
+  auto make_target() -> torch::Tensor;
 
   auto get_legal_actions() -> std::span<Core::ActionId>;
 

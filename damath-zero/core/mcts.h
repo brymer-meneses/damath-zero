@@ -66,7 +66,10 @@ auto MCTS::run(Game auto game, Network auto network) -> NodeId {
 
 auto MCTS::expand_node(NodeId node_id, Game auto game, Network auto network)
     -> f64 {
-  auto [value, policy] = network.inference(game.make_image());
+  auto result = network.inference(game.make_image());
+  auto value = result[0];
+  auto policy = result[1];
+
   auto& node = nodes_.get(node_id);
   node.played_by = game.get_current_player();
   auto legal_actions = game.get_legal_actions();
