@@ -9,7 +9,7 @@ namespace DamathZero::Core {
 
 template <typename N>
 concept Network = requires(N n, torch::Tensor t) {
-  { n.forward(t) } -> std::same_as<std::pair<f64, torch::Tensor>>;
+  { n.inference(t) } -> std::same_as<std::pair<f64, torch::Tensor>>;
 };
 
 template <Network Network>

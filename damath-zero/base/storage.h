@@ -1,7 +1,7 @@
 #ifndef DAMATH_ZERO_BASE_STORAGE_H
 #define DAMATH_ZERO_BASE_STORAGE_H
 
-#include <type_traits>
+#include <concepts>
 #include <utility>
 #include <vector>
 
@@ -10,7 +10,7 @@
 namespace DamathZero::Base {
 
 template <typename IdType, typename ValueType>
-  requires std::is_base_of_v<Id, IdType>
+  requires std::derived_from<IdType, Id>
 class Storage {
  public:
   auto get(IdType id) -> ValueType& {

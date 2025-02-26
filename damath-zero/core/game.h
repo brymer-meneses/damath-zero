@@ -35,7 +35,7 @@ struct ActionId : Base::Id {
 
 template <typename G>
 concept Game = requires(G g, ActionId id) {
-  { G::action_size() } -> std::same_as<i64>;
+  { g.get_action_size() } -> std::same_as<u64>;
 
   { g.is_terminal() } -> std::same_as<bool>;
   { g.clone() } -> std::same_as<G>;
@@ -46,7 +46,7 @@ concept Game = requires(G g, ActionId id) {
   { g.get_history() } -> std::same_as<std::span<ActionId>>;
 
   { g.get_current_player() } -> std::same_as<Player>;
-  { g.get_legal_actions() } -> std::same_as<std::vector<ActionId>>;
+  { g.get_legal_actions() } -> std::same_as<std::span<ActionId>>;
 };
 
 }  // namespace DamathZero::Core

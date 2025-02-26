@@ -37,6 +37,8 @@ class MCTS {
 };
 
 auto MCTS::run(Game auto game, Network auto network) -> NodeId {
+  c10::InferenceMode guard;
+
   auto root_id = nodes_.create(ActionId::invalid(), 0);
   auto _ = expand_node(root_id, game, network);
 
@@ -64,7 +66,7 @@ auto MCTS::run(Game auto game, Network auto network) -> NodeId {
 
 auto MCTS::expand_node(NodeId node_id, Game auto game, Network auto network)
     -> f64 {
-  auto [value, policy] = network.forward(game.make_image());
+  auto [value, policy] = network.inference(game.make_image());
   auto& node = nodes_.get(node_id);
   node.played_by = game.get_current_player();
   auto legal_actions = game.get_legal_actions();
