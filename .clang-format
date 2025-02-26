@@ -5,5 +5,5 @@ AllowShortLoopsOnASingleLine: 'false'
 DerivePointerAlignment: 'false'
 ExperimentalAutoDetectBinPacking: 'false'
 FixNamespaceComments: 'true'
-InsertBraces: 'true'
+InsertBraces: 'false'
 PointerAlignment: Left
