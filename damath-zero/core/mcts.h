@@ -1,28 +1,26 @@
 #ifndef DAMATH_ZERO_CORE_MCTS_H
 #define DAMATH_ZERO_CORE_MCTS_H
 
+#include <torch/torch.h>
+
 #include <cassert>
 #include <span>
 
+#include "damath-zero/core/config.h"
 #include "damath-zero/core/game.h"
 #include "damath-zero/core/network.h"
 #include "damath-zero/core/node.h"
 
 namespace DamathZero::Core {
 
-struct Config {
-  f64 c_base;
-  f64 c_init;
-
-  i32 num_simulations;
-};
-
 class MCTS {
  public:
   MCTS(Config config) : config_(config) {}
 
-  template <Game Game, Network Network>
-  auto run(Game game, Network network) -> NodeId;
+  auto run(Game auto game, Network auto network) -> NodeId;
+
+  auto nodes() const -> NodeStorage const&;
+  auto nodes() -> NodeStorage&;
 
  private:
   auto select_highest_puct_score(NodeId parent) const -> NodeId;
@@ -31,16 +29,14 @@ class MCTS {
 
   auto backpropagate(std::span<NodeId> path, f64 value, Player player) -> void;
 
-  template <Game Game, Network Network>
-  auto expand_node(NodeId node, Game game, Network network) -> f64;
+  auto expand_node(NodeId node, Game auto game, Network auto network) -> f64;
 
  private:
   NodeStorage nodes_;
   Config config_;
 };
 
-template <Game Game, Network Network>
-auto MCTS::run(Game game, Network network) -> NodeId {
+auto MCTS::run(Game auto game, Network auto network) -> NodeId {
   auto root_id = nodes_.create(ActionId::invalid(), 0);
   auto _ = expand_node(root_id, game, network);
 
@@ -66,15 +62,34 @@ auto MCTS::run(Game game, Network network) -> NodeId {
   return select_highest_visit_count(root_id);
 }
 
-template <Game Game, Network Network>
-auto MCTS::expand_node(NodeId node_id, Game game, Network network) -> f64 {
-  auto [value, policy] = network.inference(game.make_image());
+auto MCTS::expand_node(NodeId node_id, Game auto game, Network auto network)
+    -> f64 {
+  auto [value, policy] = network.forward(game.make_image());
   auto& node = nodes_.get(node_id);
   node.played_by = game.get_current_player();
-
   auto legal_actions = game.get_legal_actions();
 
-  return 0;
+  // Create a boolean mask for legal actions
+  auto legal_mask = torch::zeros_like(policy, torch::kBool);
+  for (ActionId action : legal_actions) {
+    legal_mask[action.value()] = true;
+  }
+
+  // Use where to mask illegal actions (set to -inf)
+  auto masked_policy = torch::where(
+      legal_mask, policy,
+      torch::full_like(policy, -std::numeric_limits<float>::infinity()));
+
+  // Apply softmax to get probabilities
+  torch::Tensor probs = torch::softmax(masked_policy, 0);
+
+  // Add children nodes with proper probabilities
+  for (ActionId action : legal_actions) {
+    auto p = probs[action.value()].item<f64>();
+    node.children.push_back(nodes_.create(action, p));
+  }
+
+  return value;
 }
 
 }  // namespace DamathZero::Core

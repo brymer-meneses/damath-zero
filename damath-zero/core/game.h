@@ -4,7 +4,7 @@
 #include <torch/torch.h>
 
 #include <concepts>
-#include <vector>
+#include <span>
 
 #include "damath-zero/base/id.h"
 
@@ -42,6 +42,8 @@ concept Game = requires(G g, ActionId id) {
   { g.apply(id) } -> std::same_as<void>;
 
   { g.make_image() } -> std::same_as<torch::Tensor>;
+
+  { g.get_history() } -> std::same_as<std::span<ActionId>>;
 
   { g.get_current_player() } -> std::same_as<Player>;
   { g.get_legal_actions() } -> std::same_as<std::vector<ActionId>>;
