@@ -17,10 +17,10 @@ target_compile_features(damath-zero-server PRIVATE cxx_std_23)
 target_sources(damath-zero-server PRIVATE damath-zero/server/main.cpp)
 target_link_libraries(damath-zero-server PRIVATE damath-zero httplib::httplib)
 
-add_custom_command(TARGET damath-zero-server PRE_BUILD 
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/damath-zero/app $<TARGET_FILE_DIR:damath-zero-server>)
-
+add_custom_command(TARGET damath-zero-server POST_BUILD
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/damath-zero/app
+  COMMAND bun install && bun run build && rm -rf node_modules && rm bun.lock && mv -f dist ${CMAKE_CURRENT_BINARY_DIR}/dist)
+  
 # Tests
 enable_testing()
 
