@@ -1,7 +1,7 @@
 #include "damath-zero/base/types.h"
 #include "damath-zero/core/context.h"
+#include "damath-zero/games/tictactoe/game.h"
 #include "damath-zero/games/tictactoe/network.h"
-#include "damath-zero/games/tictactoe/tictactoe.h"
 
 using namespace DamathZero;
 

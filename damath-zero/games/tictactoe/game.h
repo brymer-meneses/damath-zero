@@ -6,6 +6,7 @@
 #include <span>
 #include <vector>
 
+#include "damath-zero/base/types.h"
 #include "damath-zero/core/game.h"
 
 namespace DamathZero::Games {
@@ -13,13 +14,12 @@ namespace DamathZero::Games {
 class TicTacToe {
  public:
   auto is_terminal() -> bool;
-  auto clone() -> TicTacToe;
   auto apply(Core::ActionId id) -> void;
 
   auto make_image() -> torch::Tensor;
   auto make_target() -> torch::Tensor;
 
-  auto get_legal_actions() -> std::span<Core::ActionId>;
+  auto get_legal_actions() const -> std::vector<Core::ActionId>;
 
   constexpr auto get_action_size() const -> u64 { return 9; }
   constexpr auto get_history() -> std::span<Core::ActionId> { return history_; }
@@ -27,7 +27,8 @@ class TicTacToe {
 
  private:
   std::vector<Core::ActionId> history_;
-  Core::Player player_;
+  std::array<i8, 9> board_ = {0};
+  Core::Player player_ = Core::Player::first();
 };
 
 static_assert(Core::Game<TicTacToe>,

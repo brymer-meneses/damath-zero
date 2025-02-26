@@ -13,7 +13,7 @@ namespace DamathZero::Core {
 template <Game Game, Network Network>
 class Context {
  public:
-  Context(Config config) : config_(config) {}
+  Context(Config config) : config_(config), replay_buffer_(config) {}
   auto run() -> void;
 
  private:

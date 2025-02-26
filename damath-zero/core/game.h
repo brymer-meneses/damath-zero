@@ -40,7 +40,6 @@ concept Game = requires(G g, ActionId id) {
   { g.get_action_size() } -> std::same_as<u64>;
 
   { g.is_terminal() } -> std::same_as<bool>;
-  { g.clone() } -> std::same_as<G>;
   { g.apply(id) } -> std::same_as<void>;
 
   { g.make_image() } -> std::same_as<torch::Tensor>;
@@ -49,7 +48,7 @@ concept Game = requires(G g, ActionId id) {
   { g.get_history() } -> std::same_as<std::span<ActionId>>;
 
   { g.get_current_player() } -> std::same_as<Player>;
-  { g.get_legal_actions() } -> std::same_as<std::span<ActionId>>;
+  { g.get_legal_actions() } -> std::same_as<std::vector<ActionId>>;
 };
 
 template <Game Game>
