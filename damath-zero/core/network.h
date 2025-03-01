@@ -10,6 +10,7 @@ namespace DamathZero::Core {
 template <typename N>
 concept Network = requires(N n, torch::Tensor t) {
   { n.inference(t) } -> std::same_as<torch::Tensor>;
+  { n.save() } -> std::same_as<void>;
 };
 
 // TODO: this should use mutexes to avoid data races

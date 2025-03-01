@@ -1,6 +1,7 @@
 #ifndef DAMATH_ZERO_CORE_NODE_H
 #define DAMATH_ZERO_CORE_NODE_H
 
+#include <glaze/glaze.hpp>
 #include <vector>
 
 #include "damath-zero/base/storage.h"
@@ -35,7 +36,7 @@ class Node {
   ActionId action_taken;
   f64 prior = 0;
   f64 value_sum = 0;
-  Player played_by = Player::first();
+  Player played_by = Player::First;
   std::vector<NodeId> children;
 };
 

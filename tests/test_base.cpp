@@ -26,7 +26,7 @@ TEST(Base, Storage) {
 }
 
 TEST(Base, Id) {
-  auto invalid_id = NodeId::invalid();
+  auto invalid_id = NodeId::Invalid;
   auto valid_id = NodeId(1);
 
   EXPECT_EQ(invalid_id.is_valid(), false);

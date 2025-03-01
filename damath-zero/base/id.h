@@ -12,11 +12,14 @@ class Id {
 
   constexpr auto is_valid() const -> bool { return value_ != -1; }
   constexpr auto value() const -> i32 { return value_; }
-  static constexpr auto invalid() -> Id { return Id{-1}; }
+
+  static const Id Invalid;
 
  private:
   i32 value_;
 };
+
+inline const Id Id::Invalid = Id(-1);
 
 }  // namespace DamathZero::Base
 

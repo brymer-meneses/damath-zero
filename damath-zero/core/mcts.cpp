@@ -35,7 +35,7 @@ auto MCTS::compute_puct_score(NodeId parent_id, NodeId child_id) const -> f64 {
 
 auto MCTS::select_highest_puct_score(NodeId parent_id) const -> NodeId {
   const auto& parent = nodes_.get(parent_id);
-  assert(parent.children.size() > 0);
+  assert(parent.is_expanded());
 
   return *std::max_element(parent.children.begin(), parent.children.end(),
                            [this, parent_id](const NodeId n1, const NodeId n2) {
@@ -46,7 +46,7 @@ auto MCTS::select_highest_puct_score(NodeId parent_id) const -> NodeId {
 
 auto MCTS::select_highest_visit_count(NodeId parent_id) const -> NodeId {
   const auto& parent = nodes_.get(parent_id);
-  assert(parent.children.size() > 0);
+  assert(parent.is_expanded());
 
   // TODO: do something different if game.history is not sufficient
   return *std::max_element(parent.children.begin(), parent.children.end(),

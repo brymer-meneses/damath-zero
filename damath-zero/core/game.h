@@ -4,6 +4,7 @@
 #include <torch/torch.h>
 
 #include <concepts>
+#include <glaze/glaze.hpp>
 #include <span>
 #include <vector>
 
@@ -14,14 +15,12 @@ namespace DamathZero::Core {
 
 class Player {
  public:
-  static constexpr auto first() -> Player { return Player(true); }
-  static constexpr auto second() -> Player { return Player(false); }
-
   constexpr auto next() const -> Player { return Player(not is_first); }
 
-  constexpr auto operator==(Player player) -> bool {
-    return player.is_first == is_first;
-  }
+  constexpr auto operator==(const Player& player) const -> bool = default;
+
+  static const Player First;
+  static const Player Second;
 
  private:
   constexpr Player(bool is_first) : is_first(is_first) {}
@@ -30,6 +29,9 @@ class Player {
  private:
   bool is_first = false;
 };
+
+inline const Player Player::First = Player(true);
+inline const Player Player::Second = Player(false);
 
 struct ActionId : Base::Id {
   using Id::Id;
@@ -92,21 +94,15 @@ auto ReplayBuffer<Game>::sample_batch() const -> torch::Tensor {
   auto sampled_indices = torch::multinomial(probabilities, config_.batch_size,
                                             /*replacement=*/false);
 
-  // Collect the sampled games
   std::vector<Game> random_games;
   random_games.reserve(config_.batch_size);
 
-  for (int64_t i = 0; i < config_.batch_size; ++i) {
-    int64_t idx = sampled_indices[i].item<int64_t>();
+  for (auto i = 0; i < config_.batch_size; ++i) {
+    auto idx = sampled_indices[i].template item<i64>();
     random_games.push_back(games_[idx]);
   }
 
-  // Process the sampled games and create result tensor
-  // This part depends on what you want to return
-  torch::Tensor result =
-      torch::empty({0});  // Replace with actual tensor creation
-
-  return result;
+  return torch::tensor({0, 0});
 };
 
 }  // namespace DamathZero::Core

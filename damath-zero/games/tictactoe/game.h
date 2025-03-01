@@ -6,12 +6,13 @@
 #include <span>
 #include <vector>
 
+#include "damath-zero/base/macros.h"
 #include "damath-zero/base/types.h"
 #include "damath-zero/core/game.h"
 
-namespace DamathZero::Games {
+namespace DamathZero::Games::TicTacToe {
 
-class TicTacToe {
+class Game {
  public:
   auto is_terminal() -> bool;
   auto apply(Core::ActionId id) -> void;
@@ -28,12 +29,11 @@ class TicTacToe {
  private:
   std::vector<Core::ActionId> history_;
   std::array<i8, 9> board_ = {0};
-  Core::Player player_ = Core::Player::first();
+  Core::Player player_ = Core::Player::First;
 };
 
-static_assert(Core::Game<TicTacToe>,
-              "TicTacToe must conform to the Core::Game interface.");
+REQUIRE_CONCEPT(Core::Game, Game);
 
-}  // namespace DamathZero::Games
+}  // namespace DamathZero::Games::TicTacToe
 
 #endif  // !DAMATH_ZERO_GAMES_TICTACTOE_H

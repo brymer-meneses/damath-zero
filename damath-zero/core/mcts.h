@@ -37,9 +37,10 @@ class MCTS {
 };
 
 auto MCTS::run(Game auto game, Network auto network) -> NodeId {
+  // Disable gradient computation.
   c10::InferenceMode guard;
 
-  auto root_id = nodes_.create(ActionId::invalid(), 0);
+  auto root_id = nodes_.create(ActionId::Invalid, 0);
   auto _ = expand_node(root_id, game, network);
 
   for (auto i = 0; i < config_.num_simulations; i++) {
