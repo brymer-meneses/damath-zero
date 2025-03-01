@@ -10,7 +10,11 @@ struct Node {
 
 struct NodeId : DamathZero::Base::Id {
   using Id::Id;
+
+  static const NodeId Invalid;
 };
+
+inline const NodeId NodeId::Invalid = NodeId(-1);
 
 struct Nodes : DamathZero::Base::Storage<NodeId, Node> {
   using Storage::Storage;

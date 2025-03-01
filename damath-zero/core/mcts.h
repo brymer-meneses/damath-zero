@@ -40,7 +40,7 @@ auto MCTS::run(Game auto game, Network auto network) -> NodeId {
   // Disable gradient computation.
   c10::InferenceMode guard;
 
-  auto root_id = nodes_.create(ActionId::Invalid, 0);
+  auto root_id = nodes_.create(ActionId::Invalid, 0, Player::First);
   auto _ = expand_node(root_id, game, network);
 
   for (auto i = 0; i < config_.num_simulations; i++) {
@@ -48,7 +48,7 @@ auto MCTS::run(Game auto game, Network auto network) -> NodeId {
 
     auto node_id = root_id;
     auto& node = nodes_.get(node_id);
-    auto scratch_game = game.clone();
+    auto scratch_game = game;
 
     while (node.is_expanded()) {
       node_id = select_highest_puct_score(node_id);
@@ -95,7 +95,7 @@ auto MCTS::expand_node(NodeId node_id, Game auto game, Network auto network)
     node.children.push_back(nodes_.create(action, p));
   }
 
-  return value;
+  return value.template item<f64>();
 }
 
 }  // namespace DamathZero::Core

@@ -16,7 +16,7 @@ namespace DamathZero::Server {
 template <Core::Game Game, Core::Network Network>
 auto setup_server(httplib::Server& server, Core::Config config,
                   std::string_view name) -> void {
-  Games::TicTacToe game;
+  Games::TicTacToe::Game game;
 
   //   server.Get(std::format("/{}/predict", name),
   //              [context](const httplib::Request& req, httplib::Response& res)

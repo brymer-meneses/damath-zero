@@ -12,11 +12,15 @@ namespace DamathZero::Core {
 
 struct NodeId : Base::Id {
   using Id::Id;
+
+  static const NodeId Invalid;
 };
+
+inline const NodeId NodeId::Invalid = NodeId(-1);
 
 class Node {
  public:
-  Node(ActionId action_taken, f64 prior, Player played_by)
+  Node(ActionId action_taken, f64 prior, Player played_by = Player::First)
       : action_taken(action_taken), prior(prior), played_by(played_by) {}
 
   constexpr auto is_expanded() const -> bool { return children.size() > 0; }

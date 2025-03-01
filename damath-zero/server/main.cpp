@@ -6,9 +6,10 @@
 #include "damath-zero/games/tictactoe/network.h"
 #include "damath-zero/server/game_server.h"
 
+using namespace DamathZero::Games;
+
 auto main(int argc, char** argv) -> int {
   auto srv = httplib::Server{};
-  std::vector<DamathZero::Games::TicTacToe> games;
 
   // auto path = std::string_view{argv[0]};
   // if (path.ends_with("server"))
@@ -18,8 +19,7 @@ auto main(int argc, char** argv) -> int {
   //   std::print("Failed to set mount point...\n");
 
   auto config = DamathZero::Core::Config{};
-  DamathZero::Server::setup_server<DamathZero::Games::TicTacToe,
-                                   DamathZero::Games::TicTacToeNetwork>(
+  DamathZero::Server::setup_server<TicTacToe::Game, TicTacToe::Network>(
       srv, config, "tictactoe");
 
   std::print("Listening on http://0.0.0.0:80\n");

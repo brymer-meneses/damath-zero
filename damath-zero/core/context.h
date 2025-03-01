@@ -32,7 +32,7 @@ auto Context<Game, Network>::run() -> void {
   std::vector<std::thread> threads;
 
   for (auto i = 0; i < config_.num_actors; i++) {
-    threads.push_back(std::thread(run_selfplay));
+    threads.push_back(std::thread(&Context<Game, Network>::run_selfplay, this));
   }
 
   // NOTE: we do not need to join the threads since we want the process to stop
@@ -47,8 +47,8 @@ auto Context<Game, Network>::play_game(Game game, Network network) -> void {
          game.get_history().size() < config_.max_moves) {
     auto mcts = MCTS(config_);
     auto root_id = mcts.run(game, network);
-    auto action_id = mcts.nodes().get(root_id).action_id;
-    game.apply(action_id);
+    auto action = mcts.nodes().get(root_id).action_taken;
+    game.apply(action);
   }
 }
 

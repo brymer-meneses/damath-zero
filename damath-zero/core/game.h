@@ -35,7 +35,11 @@ inline const Player Player::Second = Player(false);
 
 struct ActionId : Base::Id {
   using Id::Id;
+
+  static const ActionId Invalid;
 };
+
+inline const ActionId ActionId::Invalid = ActionId(-1);
 
 template <typename G>
 concept Game = requires(G g, ActionId id) {
@@ -47,7 +51,7 @@ concept Game = requires(G g, ActionId id) {
   { g.make_image() } -> std::same_as<torch::Tensor>;
   { g.make_target() } -> std::same_as<torch::Tensor>;
 
-  { g.get_history() } -> std::same_as<std::span<ActionId>>;
+  { g.get_history() } -> std::same_as<std::span<const ActionId>>;
 
   { g.get_current_player() } -> std::same_as<Player>;
   { g.get_legal_actions() } -> std::same_as<std::vector<ActionId>>;
@@ -61,7 +65,7 @@ class ReplayBuffer {
   };
 
   auto save_game(Game game) -> void;
-  auto sample_batch() const -> torch::Tensor;
+  auto sample_batch() -> torch::Tensor;
 
  private:
   Config config_;
@@ -74,12 +78,12 @@ auto ReplayBuffer<Game>::save_game(Game game) -> void {
 };
 
 template <Game Game>
-auto ReplayBuffer<Game>::sample_batch() const -> torch::Tensor {
+auto ReplayBuffer<Game>::sample_batch() -> torch::Tensor {
   // Calculate history sizes for each game
   std::vector<i64> history_sizes;
   history_sizes.reserve(games_.size());
 
-  for (const auto& game : games_) {
+  for (auto& game : games_) {
     history_sizes.push_back(static_cast<i64>(game.get_history().size()));
   }
 

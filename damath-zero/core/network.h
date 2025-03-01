@@ -17,7 +17,7 @@ concept Network = requires(N n, torch::Tensor t) {
 template <Network Network>
 class NetworkStorage {
  public:
-  auto get_latest() const -> Network&;
+  auto get_latest() -> Network&;
   auto save(u32 id, Network network) -> void;
 
  private:
@@ -25,11 +25,11 @@ class NetworkStorage {
 };
 
 template <Network Network>
-auto NetworkStorage<Network>::get_latest() const -> Network& {
+auto NetworkStorage<Network>::get_latest() -> Network& {
   if (networks_.size() > 0) {
   }
 
-  return networks_.back();
+  return networks_.back().second;
 }
 
 template <Network Network>

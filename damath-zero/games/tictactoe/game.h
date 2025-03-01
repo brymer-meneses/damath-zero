@@ -23,7 +23,9 @@ class Game {
   auto get_legal_actions() const -> std::vector<Core::ActionId>;
 
   constexpr auto get_action_size() const -> u64 { return 9; }
-  constexpr auto get_history() -> std::span<Core::ActionId> { return history_; }
+  constexpr auto get_history() const -> std::span<const Core::ActionId> {
+    return history_;
+  }
   constexpr auto get_current_player() const -> Core::Player { return player_; }
 
  private:
