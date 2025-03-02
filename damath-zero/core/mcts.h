@@ -7,7 +7,6 @@
 #include <span>
 
 #include "damath-zero/core/config.h"
-#include "damath-zero/core/game.h"
 #include "damath-zero/core/network.h"
 #include "damath-zero/core/node.h"
 
@@ -17,7 +16,8 @@ class MCTS {
  public:
   MCTS(Config config) : config_(config) {}
 
-  auto run(Game auto game, Network auto network) -> NodeId;
+  auto run(Player previous_player, Board auto board, Network auto network)
+      -> NodeId;
 
   constexpr auto nodes() const -> NodeStorage const& { return nodes_; }
   constexpr auto nodes() -> NodeStorage& { return nodes_; };
@@ -29,51 +29,55 @@ class MCTS {
 
   auto backpropagate(std::span<NodeId> path, f64 value, Player player) -> void;
 
-  auto expand_node(NodeId node, Game auto game, Network auto network) -> f64;
+  auto expand_node(NodeId node, Player player, Board auto board,
+                   Network auto network) -> f64;
 
  private:
   NodeStorage nodes_;
   Config config_;
 };
 
-auto MCTS::run(Game auto game, Network auto network) -> NodeId {
+auto MCTS::run(Player player, Board auto board, Network auto network)
+    -> NodeId {
   // Disable gradient computation.
   c10::InferenceMode guard;
 
   auto root_id = nodes_.create(ActionId::Invalid, 0, Player::First);
-  auto _ = expand_node(root_id, game, network);
+  auto _ = expand_node(root_id, board, network);
 
   for (auto i = 0; i < config_.num_simulations; i++) {
     std::vector<NodeId> path;
 
     auto node_id = root_id;
     auto& node = nodes_.get(node_id);
-    auto scratch_game = game;
 
     while (node.is_expanded()) {
       node_id = select_highest_puct_score(node_id);
       auto& node = nodes_.get(node_id);
       auto action_id = node.action_taken;
-      scratch_game.apply(action_id);
+      auto [new_player, new_board] = board.apply(player, action_id);
+      board = new_board;
+      player = new_player;
+
       path.push_back(node_id);
     }
 
-    auto value = expand_node(node_id, scratch_game, network);
-    backpropagate(path, value, scratch_game.get_current_player());
+    auto value = expand_node(node_id, player, board, network);
+    backpropagate(path, value, player);
   }
 
   return select_highest_visit_count(root_id);
 }
 
-auto MCTS::expand_node(NodeId node_id, Game auto game, Network auto network)
-    -> f64 {
-  auto result = network.inference(game.make_image(StateIndex::Last));
+auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
+                       Network auto network) -> f64 {
+  auto result = network.inference(board.make_image());
   auto value = result[0];
   auto policy = result[1];
 
   auto& node = nodes_.get(node_id);
-  node.played_by = game.get_current_player();
-  auto legal_actions = game.get_legal_actions();
+  node.played_by = player;
+  auto legal_actions = board.get_legal_actions();
 
   // Create a boolean mask for legal actions
   auto legal_mask = torch::zeros_like(policy, torch::kBool);

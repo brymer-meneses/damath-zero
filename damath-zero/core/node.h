@@ -6,9 +6,11 @@
 
 #include "damath-zero/base/storage.h"
 #include "damath-zero/base/types.h"
-#include "damath-zero/core/game.h"
+#include "damath-zero/core/board.h"
 
 namespace DamathZero::Core {
+
+struct ActionId;
 
 struct NodeId : Base::Id {
   using Id::Id;

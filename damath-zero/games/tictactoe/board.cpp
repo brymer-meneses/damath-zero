@@ -1,10 +1,10 @@
-#include "damath-zero/games/tictactoe/game.h"
-
 #include <array>
 
-using namespace DamathZero::Games::TicTacToe;
+#include "damath-zero/games/tictactoe/game.h"
 
-auto Game::is_terminal() -> bool {
+using namespace DamathZero::Boards::TicTacToe;
+
+auto Board::is_terminal() -> bool {
   if (std::all_of(board_.begin(), board_.end(), [](auto x) { return x != 0; }))
     return true;
 
@@ -29,7 +29,7 @@ auto Game::is_terminal() -> bool {
   return false;
 }
 
-auto Game::apply(Core::ActionId id) -> void {
+auto Board::apply(Core::ActionId id) -> void {
   if (player_ == Core::Player::First) {
     board_[id.value()] = 1;
   } else {
@@ -39,15 +39,15 @@ auto Game::apply(Core::ActionId id) -> void {
   player_ = player_.next();
 }
 
-auto Game::make_image(Core::StateIndex id) const -> torch::Tensor {
+auto Board::make_image(Core::StateIndex id) const -> torch::Tensor {
   return torch::tensor(board_.data());
 }
 
-auto Game::make_target(Core::StateIndex id) const -> torch::Tensor {
+auto Board::make_target(Core::StateIndex id) const -> torch::Tensor {
   return torch::tensor(board_.data());
 }
 
-auto Game::get_legal_actions() const -> std::vector<Core::ActionId> {
+auto Board::get_legal_actions() const -> std::vector<Core::ActionId> {
   std::vector<Core::ActionId> legal_actions;
 
   for (auto i = 0; i < board_.size(); i++) {

@@ -1,8 +1,10 @@
 #ifndef DAMATH_ZERO_CORE_TRAINER_H
 #define DAMATH_ZERO_CORE_TRAINER_H
 
+#include <mutex>
 #include <thread>
 
+#include "damath-zero/core/board.h"
 #include "damath-zero/core/config.h"
 #include "damath-zero/core/game.h"
 #include "damath-zero/core/mcts.h"
@@ -10,25 +12,28 @@
 
 namespace DamathZero::Core {
 
-template <Game Game, Network Network>
+template <Board Board, Network Network>
 class Trainer {
+  using Game = Game<Board>;
+
  public:
   Trainer(Config config) : config_(config), replay_buffer_(config) {}
   auto train() -> void;
 
  private:
   auto run_selfplay() -> void;
-  auto play_game(Game game, Network network) -> void;
+  auto play_game(Network network) -> void;
   auto train_network() -> void;
 
  private:
   Config config_;
   NetworkStorage<Network> networks_;
   ReplayBuffer<Game> replay_buffer_;
+  std::mutex replay_buffer_lock_;
 };
 
-template <Game Game, Network Network>
-auto Trainer<Game, Network>::train() -> void {
+template <Board Board, Network Network>
+auto Trainer<Board, Network>::train() -> void {
   std::vector<std::thread> threads;
 
   for (auto i = 0; i < config_.num_actors; i++) {
@@ -41,19 +46,26 @@ auto Trainer<Game, Network>::train() -> void {
   train_network();
 }
 
-template <Game Game, Network Network>
-auto Trainer<Game, Network>::play_game(Game game, Network network) -> void {
-  while (not game.is_terminal() and
-         game.get_history().size() < config_.max_moves) {
+template <Board Board, Network Network>
+auto Trainer<Board, Network>::play_game(Network network) -> void {
+  Game game;
+  while (not game.is_terminal() and game.history_size() < config_.max_moves) {
     auto mcts = MCTS(config_);
-    auto root_id = mcts.run(game, network);
+    auto player = game.current_player();
+    auto root_id = mcts.run(player, game.board(), network);
     auto action = mcts.nodes().get(root_id).action_taken;
+
     game.apply(action);
+    game.store_search_statistics(mcts.nodes(), root_id);
   }
+
+  replay_buffer_lock_.lock();
+  replay_buffer_.save_game(std::move(game));
+  replay_buffer_lock_.unlock();
 }
 
-template <Game Game, Network Network>
-auto Trainer<Game, Network>::run_selfplay() -> void {
+template <Board Board, Network Network>
+auto Trainer<Board, Network>::run_selfplay() -> void {
   while (true) {
     Game game;
     auto network = networks_.get_latest();
@@ -61,8 +73,8 @@ auto Trainer<Game, Network>::run_selfplay() -> void {
   }
 }
 
-template <Game Game, Network Network>
-auto Trainer<Game, Network>::train_network() -> void {
+template <Board Board, Network Network>
+auto Trainer<Board, Network>::train_network() -> void {
   auto network = Network();
 
   for (auto i = 0; i < config_.training_steps; i++) {

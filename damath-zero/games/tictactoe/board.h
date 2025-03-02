@@ -3,32 +3,27 @@
 
 #include <torch/torch.h>
 
-#include <span>
 #include <vector>
 
 #include "damath-zero/base/macros.h"
 #include "damath-zero/base/types.h"
-#include "damath-zero/core/game.h"
+#include "damath-zero/core/board.h"
 
 namespace DamathZero::Games::TicTacToe {
 
-class Game {
+class Board {
  public:
   auto is_terminal() -> bool;
-  auto apply(Core::ActionId id) -> void;
+  auto apply(Core::Player previous_player, Core::ActionId id) -> Board;
 
-  auto make_image(Core::StateIndex id) const -> torch::Tensor;
-  auto make_target(Core::StateIndex id) const -> torch::Tensor;
-
-  auto get_terminal_value() const -> f64;
+  auto get_feature() const -> torch::Tensor;
 
   auto get_legal_actions() const -> std::vector<Core::ActionId>;
 
-  constexpr auto get_action_size() const -> u64 { return 9; }
-  constexpr auto get_history() const -> std::span<const Core::ActionId> {
-    return history_;
-  }
   constexpr auto get_current_player() const -> Core::Player { return player_; }
+
+ public:
+  static const u64 ActionSize = 9;
 
  private:
   std::vector<Core::ActionId> history_;
@@ -36,7 +31,7 @@ class Game {
   Core::Player player_ = Core::Player::First;
 };
 
-REQUIRE_CONCEPT(Core::Game, Game);
+REQUIRE_CONCEPT(Core::Board, Board);
 
 }  // namespace DamathZero::Games::TicTacToe
 
