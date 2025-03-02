@@ -17,8 +17,10 @@ class Game {
   auto is_terminal() -> bool;
   auto apply(Core::ActionId id) -> void;
 
-  auto make_image() -> torch::Tensor;
-  auto make_target() -> torch::Tensor;
+  auto make_image(Core::StateIndex id) const -> torch::Tensor;
+  auto make_target(Core::StateIndex id) const -> torch::Tensor;
+
+  auto get_terminal_value() const -> f64;
 
   auto get_legal_actions() const -> std::vector<Core::ActionId>;
 

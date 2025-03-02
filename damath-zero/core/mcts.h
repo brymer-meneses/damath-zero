@@ -19,8 +19,8 @@ class MCTS {
 
   auto run(Game auto game, Network auto network) -> NodeId;
 
-  auto nodes() const -> NodeStorage const&;
-  auto nodes() -> NodeStorage&;
+  constexpr auto nodes() const -> NodeStorage const& { return nodes_; }
+  constexpr auto nodes() -> NodeStorage& { return nodes_; };
 
  private:
   auto select_highest_puct_score(NodeId parent) const -> NodeId;
@@ -67,7 +67,7 @@ auto MCTS::run(Game auto game, Network auto network) -> NodeId {
 
 auto MCTS::expand_node(NodeId node_id, Game auto game, Network auto network)
     -> f64 {
-  auto result = network.inference(game.make_image());
+  auto result = network.inference(game.make_image(StateIndex::Last));
   auto value = result[0];
   auto policy = result[1];
 

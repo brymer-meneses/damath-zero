@@ -39,11 +39,11 @@ auto Game::apply(Core::ActionId id) -> void {
   player_ = player_.next();
 }
 
-auto Game::make_image() -> torch::Tensor {
+auto Game::make_image(Core::StateIndex id) const -> torch::Tensor {
   return torch::tensor(board_.data());
 }
 
-auto Game::make_target() -> torch::Tensor {
+auto Game::make_target(Core::StateIndex id) const -> torch::Tensor {
   return torch::tensor(board_.data());
 }
 

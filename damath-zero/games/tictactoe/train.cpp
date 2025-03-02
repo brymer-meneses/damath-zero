@@ -1,5 +1,5 @@
 #include "damath-zero/base/types.h"
-#include "damath-zero/core/context.h"
+#include "damath-zero/core/trainer.h"
 #include "damath-zero/games/tictactoe/game.h"
 #include "damath-zero/games/tictactoe/network.h"
 
@@ -8,9 +8,9 @@ using namespace DamathZero;
 
 auto main() -> i32 {
   Core::Config config;
-  Core::Context<TicTacToe::Game, TicTacToe::Network> context(config);
+  Core::Trainer<TicTacToe::Game, TicTacToe::Network> trainer(config);
 
-  context.run();
+  trainer.train();
 
   return 0;
 }
