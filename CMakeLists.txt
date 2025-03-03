@@ -17,12 +17,12 @@ add_executable(damath-zero-server)
 target_compile_features(damath-zero-server PRIVATE cxx_std_23)
 target_sources(damath-zero-server PRIVATE 
                damath-zero/server/main.cpp 
-               damath-zero/games/tictactoe/game.cpp)
+               damath-zero/games/tictactoe/board.cpp)
 target_link_libraries(damath-zero-server PRIVATE damath-zero httplib::httplib)
 
 add_executable(tictactoe
   damath-zero/games/tictactoe/train.cpp
-  damath-zero/games/tictactoe/game.cpp
+  damath-zero/games/tictactoe/board.cpp
 )
 target_compile_features(tictactoe PRIVATE cxx_std_23)
 target_link_libraries(tictactoe PRIVATE damath-zero)

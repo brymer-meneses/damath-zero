@@ -52,6 +52,7 @@ class Player {
 // of the elements in the board.
 template <typename B>
 concept Board = requires(B b, ActionId id, Player player) {
+  { B() } -> std::same_as<B>;
   { b.is_terminal(player) } -> std::same_as<bool>;
   { b.apply(player, id) } -> std::same_as<std::pair<Player, B>>;
 

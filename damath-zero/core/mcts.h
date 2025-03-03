@@ -43,7 +43,7 @@ auto MCTS::run(Player player, Board auto board, Network auto network)
   c10::InferenceMode guard;
 
   auto root_id = nodes_.create(ActionId::Invalid, 0, Player::First);
-  auto _ = expand_node(root_id, board, network);
+  auto _ = expand_node(root_id, player, board, network);
 
   for (auto i = 0; i < config_.num_simulations; i++) {
     std::vector<NodeId> path;
@@ -71,13 +71,13 @@ auto MCTS::run(Player player, Board auto board, Network auto network)
 
 auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
                        Network auto network) -> f64 {
-  auto result = network.inference(board.make_image());
+  auto result = network.inference(board.get_feature(player));
   auto value = result[0];
   auto policy = result[1];
 
   auto& node = nodes_.get(node_id);
   node.played_by = player;
-  auto legal_actions = board.get_legal_actions();
+  auto legal_actions = board.get_legal_actions(player);
 
   // Create a boolean mask for legal actions
   auto legal_mask = torch::zeros_like(policy, torch::kBool);

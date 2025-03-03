@@ -1,7 +1,6 @@
 #ifndef DAMATH_ZERO_CORE_TRAINER_H
 #define DAMATH_ZERO_CORE_TRAINER_H
 
-#include <mutex>
 #include <thread>
 
 #include "damath-zero/core/board.h"
@@ -28,8 +27,7 @@ class Trainer {
  private:
   Config config_;
   NetworkStorage<Network> networks_;
-  ReplayBuffer<Game> replay_buffer_;
-  std::mutex replay_buffer_lock_;
+  ReplayBuffer<Board> replay_buffer_;
 };
 
 template <Board Board, Network Network>
@@ -37,7 +35,8 @@ auto Trainer<Board, Network>::train() -> void {
   std::vector<std::thread> threads;
 
   for (auto i = 0; i < config_.num_actors; i++) {
-    threads.push_back(std::thread(&Trainer<Game, Network>::run_selfplay, this));
+    threads.push_back(
+        std::thread(&Trainer<Board, Network>::run_selfplay, this));
   }
 
   // NOTE: we do not need to join the threads since we want the process to stop
@@ -52,24 +51,21 @@ auto Trainer<Board, Network>::play_game(Network network) -> void {
   while (not game.is_terminal() and game.history_size() < config_.max_moves) {
     auto mcts = MCTS(config_);
     auto player = game.current_player();
-    auto root_id = mcts.run(player, game.board(), network);
+    auto root_id = mcts.run(player, game.current_board(), network);
     auto action = mcts.nodes().get(root_id).action_taken;
 
     game.apply(action);
     game.store_search_statistics(mcts.nodes(), root_id);
   }
 
-  replay_buffer_lock_.lock();
   replay_buffer_.save_game(std::move(game));
-  replay_buffer_lock_.unlock();
 }
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::run_selfplay() -> void {
   while (true) {
-    Game game;
     auto network = networks_.get_latest();
-    play_game(game, network);
+    play_game(network);
   }
 }
 

@@ -29,7 +29,7 @@ class Game {
   constexpr Game() { history_.push_back({Player::First, Board()}); }
 
   auto get_feature(StateIndex state_index) const -> torch::Tensor;
-  auto get_label(StateIndex state_index) const -> torch::Tensor;
+  auto get_target(StateIndex state_index) const -> torch::Tensor;
 
   auto store_search_statistics(const NodeStorage& nodes, NodeId root_id)
       -> void;
@@ -38,13 +38,16 @@ class Game {
 
   constexpr auto history_size() const -> u64 { return history_.size(); }
 
-  constexpr auto current_player() const -> Player { return history_.back()[0]; }
+  constexpr auto current_player() const -> Player {
+    return history_.back().first;
+  }
   constexpr auto current_board() const -> const Board& {
-    return history_.back()[1];
+    return history_.back().second;
   }
 
   constexpr auto is_terminal() const -> bool {
-    return current_board().is_terminal();
+    auto [current_player, current_board] = history_.back();
+    return current_board.is_terminal(current_player);
   }
 
  private:
@@ -54,7 +57,8 @@ class Game {
 
 template <Board Board>
 auto Game<Board>::apply(ActionId action_id) -> void {
-  history_.push_back(current_board().apply(current_player(), action_id));
+  auto [current_player, current_board] = history_.back();
+  history_.push_back(current_board.apply(current_player, action_id));
 }
 
 template <Board Board>
@@ -66,7 +70,7 @@ auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
 }
 
 template <Board Board>
-auto Game<Board>::get_label(StateIndex state_index) const -> torch::Tensor {
+auto Game<Board>::get_target(StateIndex state_index) const -> torch::Tensor {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
   return child_visits_[index];
@@ -113,21 +117,26 @@ class ReplayBuffer {
   auto sample_batch() const -> std::vector<PredictionPair>;
 
  private:
+  mutable std::mutex lock_;
   Config config_;
   std::vector<Game> games_;
 };
 
 template <Board Board>
 auto ReplayBuffer<Board>::save_game(Game game) -> void {
-  games_.push_back(game);
+  lock_.lock();
+  games_.push_back(std::move(game));
+  lock_.unlock();
 };
 
 template <Board Board>
 auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
+  lock_.lock();
   auto history_sizes = games_ | std::views::transform([](const auto& game) {
-                         return game.get_history().size();
+                         return game.history_size();
                        }) |
                        std::ranges::to<std::vector<i64>>();
+  lock_.unlock();
 
   auto history_sizes_tensor = torch::tensor(history_sizes, torch::kInt64);
   auto probabilities = history_sizes_tensor.to(torch::kFloat64) /
@@ -141,10 +150,10 @@ auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
   for (auto i = 0; i < config_.batch_size; i++) {
     auto game_index = sampled_indices[i].template item<i64>();
     auto& game = games_[game_index];
-    auto random_position = StateIndex(std::rand() % game.get_history().size());
+    auto random_position = StateIndex(std::rand() % game.history_size());
 
-    batch.emplace_back(game.make_feature(random_position),
-                       game.make_target(random_position));
+    batch.emplace_back(game.get_feature(random_position),
+                       game.get_target(random_position));
   }
 
   return batch;

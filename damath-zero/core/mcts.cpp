@@ -37,11 +37,11 @@ auto MCTS::select_highest_puct_score(NodeId parent_id) const -> NodeId {
   const auto& parent = nodes_.get(parent_id);
   assert(parent.is_expanded());
 
-  return *std::max_element(parent.children.begin(), parent.children.end(),
-                           [this, parent_id](const NodeId n1, const NodeId n2) {
-                             return compute_puct_score(parent_id, n1) <
-                                    compute_puct_score(parent_id, n2);
-                           });
+  return *std::ranges::max_element(parent.children,
+                                   [this, parent_id](NodeId n1, NodeId n2) {
+                                     return compute_puct_score(parent_id, n1) <
+                                            compute_puct_score(parent_id, n2);
+                                   });
 }
 
 auto MCTS::select_highest_visit_count(NodeId parent_id) const -> NodeId {
@@ -49,9 +49,8 @@ auto MCTS::select_highest_visit_count(NodeId parent_id) const -> NodeId {
   assert(parent.is_expanded());
 
   // TODO: do something different if game.history is not sufficient
-  return *std::max_element(parent.children.begin(), parent.children.end(),
-                           [this](const NodeId n1, const NodeId n2) {
-                             return nodes_.get(n1).visit_count <
-                                    nodes_.get(n2).visit_count;
-                           });
+  return *std::ranges::max_element(
+      parent.children, [this](NodeId n1, NodeId n2) {
+        return nodes_.get(n1).visit_count < nodes_.get(n2).visit_count;
+      });
 }

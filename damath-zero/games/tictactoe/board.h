@@ -13,22 +13,20 @@ namespace DamathZero::Games::TicTacToe {
 
 class Board {
  public:
-  auto is_terminal() -> bool;
-  auto apply(Core::Player previous_player, Core::ActionId id) -> Board;
+  constexpr Board(std::array<i8, 9> board) : board_(board) {}
+  constexpr Board() {}
 
-  auto get_feature() const -> torch::Tensor;
-
-  auto get_legal_actions() const -> std::vector<Core::ActionId>;
-
-  constexpr auto get_current_player() const -> Core::Player { return player_; }
+  auto is_terminal(Core::Player) const -> bool;
+  auto apply(Core::Player previous_player, Core::ActionId id)
+      -> std::pair<Core::Player, Board>;
+  auto get_feature(Core::Player) const -> torch::Tensor;
+  auto get_legal_actions(Core::Player) const -> std::vector<Core::ActionId>;
 
  public:
   static const u64 ActionSize = 9;
 
  private:
-  std::vector<Core::ActionId> history_;
   std::array<i8, 9> board_ = {0};
-  Core::Player player_ = Core::Player::First;
 };
 
 REQUIRE_CONCEPT(Core::Board, Board);
