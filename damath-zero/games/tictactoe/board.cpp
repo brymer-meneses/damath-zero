@@ -4,7 +4,11 @@
 
 using namespace DamathZero::Games::TicTacToe;
 
-auto Board::is_terminal(Core::Player _) const -> bool {
+auto Board::get_result(Core::Player) const -> Core::GameResult {
+  return Core::GameResult::Loss;
+}
+
+auto Board::is_terminal(Core::Player) const -> bool {
   if (std::all_of(board_.begin(), board_.end(), [](auto x) { return x != 0; }))
     return true;
 
@@ -37,9 +41,7 @@ auto Board::apply(Core::Player player, Core::ActionId id)
     board_[id.value()] = -1;
   }
 
-  player = player.next();
-
-  return {player, Board(board_)};
+  return {player.next(), Board(board_)};
 }
 
 auto Board::get_feature(Core::Player) const -> torch::Tensor {

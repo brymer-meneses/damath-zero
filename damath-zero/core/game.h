@@ -23,13 +23,17 @@ struct StateIndex : Base::Id {
 
 inline const StateIndex StateIndex::Last = StateIndex(-1);
 
+struct Target {
+  torch::Tensor policy;
+  f64 value;
+};
+
 template <Board Board>
 class Game {
  public:
-  constexpr Game() { history_.push_back({Player::First, Board()}); }
-
   auto get_feature(StateIndex state_index) const -> torch::Tensor;
-  auto get_target(StateIndex state_index) const -> torch::Tensor;
+
+  auto get_target(StateIndex state_index) const -> Target;
 
   auto store_search_statistics(const NodeStorage& nodes, NodeId root_id)
       -> void;
@@ -38,42 +42,64 @@ class Game {
 
   constexpr auto history_size() const -> u64 { return history_.size(); }
 
-  constexpr auto current_player() const -> Player {
-    return history_.back().first;
-  }
-  constexpr auto current_board() const -> const Board& {
-    return history_.back().second;
-  }
+  constexpr auto to_play() const -> Player { return history_.back().to_play; }
+  constexpr auto board() const -> const Board& { return history_.back().board; }
 
   constexpr auto is_terminal() const -> bool {
-    auto [current_player, current_board] = history_.back();
-    return current_board.is_terminal(current_player);
+    auto [to_play, board] = history_.back();
+    return board.is_terminal(to_play);
   }
 
  private:
-  std::vector<std::pair<Player, Board>> history_;
+  struct State {
+    Player to_play;
+    Board board;
+
+    constexpr State(Player player, Board board)
+        : to_play(player), board(board) {}
+
+    constexpr State(std::pair<Player, Board> data)
+        : to_play(data.first), board(data.second) {}
+  };
+
+  std::vector<State> history_ = {{Player::First, Board()}};
   std::vector<torch::Tensor> child_visits_;
 };
 
 template <Board Board>
 auto Game<Board>::apply(ActionId action_id) -> void {
-  auto [current_player, current_board] = history_.back();
-  history_.push_back(current_board.apply(current_player, action_id));
+  auto [to_play, board] = history_.back();
+  history_.push_back(board.apply(to_play, action_id));
 }
 
 template <Board Board>
 auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
-  const auto [player, board] = history_[index];
-  return board.get_feature(player);
+  const auto [to_play, board] = history_[index];
+  return board.get_feature(to_play);
 }
 
 template <Board Board>
-auto Game<Board>::get_target(StateIndex state_index) const -> torch::Tensor {
+auto Game<Board>::get_target(StateIndex state_index) const -> Target {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
-  return child_visits_[index];
+  auto [to_play, board] = history_[index];
+
+  f64 value;
+  switch (board.get_result(to_play)) {
+    case GameResult::Win:
+      value = 1;
+      break;
+    case GameResult::Loss:
+      value = -1;
+      break;
+    case GameResult::Draw:
+      value = 0;
+      break;
+  }
+
+  return {child_visits_[index], value};
 }
 
 template <Board Board>
@@ -97,11 +123,11 @@ auto Game<Board>::store_search_statistics(const NodeStorage& nodes,
 }
 
 struct PredictionPair {
-  torch::Tensor data;
-  torch::Tensor target;
+  torch::Tensor feature;
+  Target target;
 
-  PredictionPair(torch::Tensor data, torch::Tensor target)
-      : data(data), target(target) {};
+  PredictionPair(torch::Tensor feature, Target target)
+      : feature(feature), target(target) {};
 };
 
 template <Board Board>

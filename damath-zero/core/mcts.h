@@ -40,9 +40,9 @@ class MCTS {
 auto MCTS::run(Player player, Board auto board, Network auto network)
     -> NodeId {
   // Disable gradient computation.
-  c10::InferenceMode guard;
+  c10::InferenceMode guard(false);
 
-  auto root_id = nodes_.create(ActionId::Invalid, 0, Player::First);
+  auto root_id = nodes_.create(0.0);
   auto _ = expand_node(root_id, player, board, network);
 
   for (auto i = 0; i < config_.num_simulations; i++) {
@@ -71,9 +71,7 @@ auto MCTS::run(Player player, Board auto board, Network auto network)
 
 auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
                        Network auto network) -> f64 {
-  auto result = network.inference(board.get_feature(player));
-  auto value = result[0];
-  auto policy = result[1];
+  auto [value, policy] = network.forward(board.get_feature(player));
 
   auto& node = nodes_.get(node_id);
   node.played_by = player;

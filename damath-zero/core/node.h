@@ -22,8 +22,8 @@ inline const NodeId NodeId::Invalid = NodeId(-1);
 
 class Node {
  public:
-  Node(ActionId action_taken, f64 prior, Player played_by = Player::First)
-      : action_taken(action_taken), prior(prior), played_by(played_by) {}
+  Node(f64 prior) : prior(prior) {}
+  Node(ActionId action, f64 prior) : action_taken(action), prior(prior) {}
 
   constexpr auto is_expanded() const -> bool { return children.size() > 0; }
 
@@ -39,10 +39,10 @@ class Node {
 
  public:
   i32 visit_count = 0;
-  ActionId action_taken;
+  ActionId action_taken = ActionId::Invalid;
   f64 prior = 0;
   f64 value_sum = 0;
-  Player played_by = Player::First;
+  Player played_by = Player::Invalid;
   std::vector<NodeId> children;
 };
 

@@ -3,15 +3,15 @@
 
 #include <torch/torch.h>
 
+#include <concepts>
+
 #include "damath-zero/base/types.h"
 
 namespace DamathZero::Core {
 
 template <typename N>
-concept Network = requires(N n, torch::Tensor t) {
-  { n.inference(t) } -> std::same_as<torch::Tensor>;
-  { n.save() } -> std::same_as<void>;
-};
+concept Network =
+    requires(N n, torch::Tensor t) { std::is_base_of_v<torch::nn::Module, N>; };
 
 // TODO: this should use mutexes to avoid data races
 template <Network Network>

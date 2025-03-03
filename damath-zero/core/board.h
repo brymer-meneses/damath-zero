@@ -19,9 +19,10 @@ inline const ActionId ActionId::Invalid = ActionId(-1);
 
 class Player {
  public:
-  enum Value {
+  enum Value : u8 {
     First,
     Second,
+    Invalid,
   };
   constexpr Player(Value value) : value_(value) {}
 
@@ -30,10 +31,7 @@ class Player {
   }
 
   constexpr auto next() const -> Player {
-    if (value_ == Value::First) {
-      return Player::Second;
-    }
-    return Player::First;
+    return value_ == Value::First ? Player::Second : Player::First;
   }
 
  private:
@@ -41,6 +39,12 @@ class Player {
 
  private:
   Value value_;
+};
+
+enum class GameResult {
+  Win,
+  Loss,
+  Draw,
 };
 
 // A Board represents the current state or snapshot of the game.
@@ -53,6 +57,9 @@ class Player {
 template <typename B>
 concept Board = requires(B b, ActionId id, Player player) {
   { B() } -> std::same_as<B>;
+
+  { b.get_result(player) } -> std::same_as<GameResult>;
+
   { b.is_terminal(player) } -> std::same_as<bool>;
   { b.apply(player, id) } -> std::same_as<std::pair<Player, B>>;
 

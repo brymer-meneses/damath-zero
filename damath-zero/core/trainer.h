@@ -22,6 +22,7 @@ class Trainer {
  private:
   auto run_selfplay() -> void;
   auto play_game(Network network) -> void;
+  auto update_weights(Network network) -> void;
   auto train_network() -> void;
 
  private:
@@ -50,8 +51,8 @@ auto Trainer<Board, Network>::play_game(Network network) -> void {
   Game game;
   while (not game.is_terminal() and game.history_size() < config_.max_moves) {
     auto mcts = MCTS(config_);
-    auto player = game.current_player();
-    auto root_id = mcts.run(player, game.current_board(), network);
+    auto player = game.to_play();
+    auto root_id = mcts.run(player, game.board(), network);
     auto action = mcts.nodes().get(root_id).action_taken;
 
     game.apply(action);
@@ -76,9 +77,19 @@ auto Trainer<Board, Network>::train_network() -> void {
   for (auto i = 0; i < config_.training_steps; i++) {
     if (i % config_.checkpoint_interval == 0)
       networks_.save(i, network);
-    auto batch = replay_buffer_.sample_batch();
+    update_weights(network);
   }
   networks_.save(config_.training_steps, network);
+}
+
+template <Board Board, Network Network>
+auto Trainer<Board, Network>::update_weights(Network network) -> void {
+  auto batch = replay_buffer_.sample_batch();
+  auto loss = 0.0;
+
+  for (auto [feature, target] : batch) {
+    auto [value, policy] = network.forward(feature);
+  }
 }
 
 }  // namespace DamathZero::Core
