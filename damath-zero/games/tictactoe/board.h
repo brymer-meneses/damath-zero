@@ -16,6 +16,8 @@ class Board {
   constexpr explicit Board(std::array<i8, 9> board) : board_(board) {}
   constexpr Board() {}
 
+  constexpr auto data() const -> std::array<i8, 9> { return board_; }
+
   auto get_result(Core::Player player) const -> Core::GameResult;
 
   auto is_terminal(Core::Player) const -> bool;
