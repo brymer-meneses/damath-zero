@@ -35,12 +35,7 @@ auto Board::is_terminal(Core::Player) const -> bool {
 
 auto Board::apply(Core::Player player, Core::ActionId id)
     -> std::pair<Core::Player, Board> {
-  if (player == Core::Player::First) {
-    board_[id.value()] = 1;
-  } else {
-    board_[id.value()] = -1;
-  }
-
+  board_[id.value()] = player.value() + 1;
   return {player.next(), Board(board_)};
 }
 

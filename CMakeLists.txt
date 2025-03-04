@@ -17,7 +17,8 @@ add_executable(damath-zero-server)
 target_compile_features(damath-zero-server PRIVATE cxx_std_23)
 target_sources(damath-zero-server PRIVATE 
                damath-zero/server/main.cpp 
-               damath-zero/games/tictactoe/board.cpp)
+               damath-zero/games/tictactoe/board.cpp
+               damath-zero/server/tictactoe.cpp)
 target_link_libraries(damath-zero-server PRIVATE damath-zero httplib::httplib glaze::glaze)
 
 add_executable(tictactoe

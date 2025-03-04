@@ -20,9 +20,9 @@ inline const ActionId ActionId::Invalid = ActionId(-1);
 class Player {
  public:
   enum Value : u8 {
-    First,
-    Second,
-    Invalid,
+    First = 0,
+    Second = 1,
+    Invalid = 2,
   };
   constexpr Player(Value value) : value_(value) {}
 
@@ -33,6 +33,8 @@ class Player {
   constexpr auto next() const -> Player {
     return value_ == Value::First ? Player::Second : Player::First;
   }
+
+  constexpr auto value() const -> u8 { return value_; }
 
  private:
   constexpr Player() {}

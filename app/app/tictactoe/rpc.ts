@@ -3,13 +3,14 @@
 const id: number = Math.floor(Math.random() * 1000);
 
 export interface State {
-    board: (number | null)[];
-    to_move: number;
+    id: number;
+    board: number[];
+    player: number;
     winner: number;
 }
 
 export const rpc = async (method: string, params: any = {}) => {
-    return fetch(`http://localhost:8080/${method}`, {
+    return fetch(`http://localhost:8080/tictactoe`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -22,9 +23,9 @@ export const rpc = async (method: string, params: any = {}) => {
         }),
     }).then((res) => {
         return res.json().then((json) => {
-            if (json.error)
-                throw new Error(json.error.message);
+            if (json.error) throw new Error(json.error.message);
 
+            console.log(method, json)
             const state: State = json.result;
             return state;
         });

@@ -10,7 +10,7 @@ export default function Page() {
     useEffect(() => { rpc("new").then(setState) }, []);
 
     const move = (cell: number) => {
-        rpc("move", { cell }).then(setState);
+        rpc("move", { id: state?.id, cell }).then(setState);
     };
 
     const reset = () => {
@@ -18,6 +18,8 @@ export default function Page() {
     };
 
     if (!state) return <div>Loading...</div>;
+
+    console.log(state);
 
     return (
         <main className="flex flex-col justify-center items-center p-10">
@@ -27,7 +29,7 @@ export default function Page() {
                 </div>
             )}
             <div className="grid grid-cols-3 w-full max-w-[50%] border-gray-200 border-2 rounded-lg overflow-hidden">
-                {state.board.map((cell, i) => {
+                {state.board?.map((cell, i) => {
                     console.log(cell)
                     if (cell === 0) {
                         return (
