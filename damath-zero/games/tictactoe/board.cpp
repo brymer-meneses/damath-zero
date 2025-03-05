@@ -9,7 +9,7 @@ auto Board::get_result(Core::Player) const -> Core::GameResult {
 }
 
 auto Board::is_terminal(Core::Player) const -> bool {
-  if (std::all_of(board_.begin(), board_.end(), [](auto x) { return x != 0; }))
+  if (std::ranges::all_of(board_, [](auto x) { return x != 0; }))
     return true;
 
   const std::array<std::array<int, 3>, 8> win_conditions{{
@@ -35,7 +35,12 @@ auto Board::is_terminal(Core::Player) const -> bool {
 
 auto Board::apply(Core::Player player, Core::ActionId id)
     -> std::pair<Core::Player, Board> {
-  board_[id.value()] = player.value() + 1;
+  if (player == Core::Player::First) {
+    board_[id.value()] = 1;
+  } else {
+    board_[id.value()] = -1;
+  }
+
   return {player.next(), Board(board_)};
 }
 

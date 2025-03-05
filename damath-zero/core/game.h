@@ -143,26 +143,26 @@ class ReplayBuffer {
   auto sample_batch() const -> std::vector<PredictionPair>;
 
  private:
-  mutable std::mutex lock_;
+  mutable std::mutex mutex_;
   Config config_;
   std::vector<Game> games_;
 };
 
 template <Board Board>
 auto ReplayBuffer<Board>::save_game(Game game) -> void {
-  lock_.lock();
+  mutex_.lock();
   games_.push_back(std::move(game));
-  lock_.unlock();
+  mutex_.unlock();
 };
 
 template <Board Board>
 auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
-  lock_.lock();
+  mutex_.lock();
   auto history_sizes = games_ | std::views::transform([](const auto& game) {
                          return game.history_size();
                        }) |
                        std::ranges::to<std::vector<i64>>();
-  lock_.unlock();
+  mutex_.unlock();
 
   auto history_sizes_tensor = torch::tensor(history_sizes, torch::kInt64);
   auto probabilities = history_sizes_tensor.to(torch::kFloat64) /

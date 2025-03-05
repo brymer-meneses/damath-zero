@@ -3,37 +3,43 @@
 
 #include <torch/torch.h>
 
-#include <concepts>
-
-#include "damath-zero/base/types.h"
+#include "damath-zero/base/id.h"
 
 namespace DamathZero::Core {
+
+struct CheckpointId : Base::Id {
+  using Id::Id;
+};
 
 template <typename N>
 concept Network =
     requires(N n, torch::Tensor t) { std::is_base_of_v<torch::nn::Module, N>; };
 
-// TODO: this should use mutexes to avoid data races
 template <Network Network>
 class NetworkStorage {
  public:
   auto get_latest() -> Network&;
-  auto save(u32 id, Network network) -> void;
+  auto save(CheckpointId id, Network network) -> void;
 
  private:
-  std::vector<std::pair<u32, Network>> networks_;
+  mutable std::mutex mutex_;
+  std::vector<std::pair<CheckpointId, Network>> networks_;
 };
 
 template <Network Network>
 auto NetworkStorage<Network>::get_latest() -> Network& {
-  if (networks_.size() > 0) {
-  }
+  std::lock_guard lock(mutex_);
 
+  if (networks_.empty()) {
+    networks_.push_back(Network());
+  }
   return networks_.back().second;
 }
 
 template <Network Network>
-auto NetworkStorage<Network>::save(u32 id, Network network) -> void {
+auto NetworkStorage<Network>::save(CheckpointId id, Network network) -> void {
+  std::lock_guard lock(mutex_);
+
   networks_.push_back({id, network});
 }
 

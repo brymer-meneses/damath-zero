@@ -85,7 +85,7 @@ auto Trainer<Board, Network>::train_network() -> void {
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::update_weights(Network network) -> void {
   auto batch = replay_buffer_.sample_batch();
-  auto loss = 0.0;
+  f64 loss = 0.0;
 
   for (auto [feature, target] : batch) {
     auto [value, policy] = network.forward(feature);
