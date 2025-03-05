@@ -52,7 +52,8 @@ auto GameServer::start() -> void {
     auto [player, board] =
         game.board.apply(game.player, Core::ActionId{request.cell});
 
-    game = {board, player};
+    game.board = board;
+    game.player = player;
 
     return Response{
         .id = id,
@@ -64,14 +65,15 @@ auto GameServer::start() -> void {
 
   ws_.setOnClientMessageCallback(
       [this](std::shared_ptr<ix::ConnectionState> connectionState,
-          ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
-              if (msg->type == ix::WebSocketMessageType::Message) {
-                  std::println("Received: {}", msg->str);
-                  std::println("Sent: {}", rpc_server_.call(msg->str));
+             ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
+        if (msg->type == ix::WebSocketMessageType::Message) {
+          auto result = rpc_server_.call(msg->str);
+          std::println("Received: {}", msg->str);
+          std::println("Sent: {}", result);
 
-                  webSocket.send(rpc_server_.call(msg->str), msg->binary);
-              }
-          });
+          webSocket.send(result, msg->binary);
+        }
+      });
 
   auto res = ws_.listen();
   std::println("Listening on ws://{}:{}", ws_.getHost(), ws_.getPort());
