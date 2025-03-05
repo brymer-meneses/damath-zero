@@ -9,7 +9,7 @@
 
 namespace DamathZero::Core {
 
-struct ActionId : Base::Id {
+struct ActionId : Base::Id<ActionId> {
   using Id::Id;
 
   static const ActionId Invalid;
@@ -26,7 +26,7 @@ class Player {
   };
   constexpr Player(Value value) : value_(value) {}
 
-  constexpr auto operator==(Player player) -> bool {
+  constexpr auto operator==(Player player) const -> bool {
     return player.value_ == value_;
   }
 
@@ -37,7 +37,7 @@ class Player {
   constexpr auto value() const -> u8 { return value_; }
 
  private:
-  constexpr Player() {}
+  constexpr Player() = default;
 
  private:
   Value value_;

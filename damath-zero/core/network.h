@@ -7,7 +7,7 @@
 
 namespace DamathZero::Core {
 
-struct CheckpointId : Base::Id {
+struct CheckpointId : Base::Id<CheckpointId> {
   using Id::Id;
 };
 
@@ -31,7 +31,7 @@ auto NetworkStorage<Network>::get_latest() -> Network& {
   std::lock_guard lock(mutex_);
 
   if (networks_.empty()) {
-    networks_.push_back(Network());
+    networks_.push_back({CheckpointId(0), Network()});
   }
   return networks_.back().second;
 }

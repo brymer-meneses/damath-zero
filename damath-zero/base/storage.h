@@ -10,7 +10,7 @@
 namespace DamathZero::Base {
 
 template <typename IdType, typename ValueType>
-  requires std::derived_from<IdType, Id>
+  requires std::derived_from<IdType, Id<IdType>>
 class Storage {
  public:
   auto get(IdType id) -> ValueType& {

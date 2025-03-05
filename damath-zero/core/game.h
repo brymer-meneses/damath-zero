@@ -13,7 +13,7 @@
 
 namespace DamathZero::Core {
 
-struct StateIndex : Base::Id {
+struct StateIndex : Base::Id<StateIndex> {
   using Id::Id;
 
   constexpr auto is_last() const -> bool { return Id::value() == -1; }
