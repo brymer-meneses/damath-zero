@@ -23,11 +23,9 @@ auto Board::is_terminal(Core::Player) const -> bool {
       {2, 4, 6},
   }};
 
-  if (std::ranges::any_of(win_conditions.begin(), win_conditions.end(),
-                          [&](auto board) {
-                            return board[0] == board[1] and
-                                   board[1] == board[2] and board[0] != 0;
-                          }))
+  if (std::ranges::any_of(win_conditions, [&](auto board) {
+        return board[0] == board[1] and board[1] == board[2] and board[0] != 0;
+      }))
     return true;
 
   return false;

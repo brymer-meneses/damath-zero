@@ -10,10 +10,10 @@ namespace DamathZero::Games::TicTacToe {
 
 struct Network : torch::nn::Module {
   Network() {
-    l1 = register_module("fc1", torch::nn::Linear(9, 16));
-    l2 = register_module("fc2", torch::nn::Linear(16, 32));
-    policy_head = register_module("fc3", torch::nn::Linear(32, 9));
-    value_head = register_module("fc3", torch::nn::Linear(32, 1));
+    l1 = register_module("l1", torch::nn::Linear(9, 16));
+    l2 = register_module("l2", torch::nn::Linear(16, 32));
+    policy_head = register_module("policy_head", torch::nn::Linear(32, 9));
+    value_head = register_module("value_head", torch::nn::Linear(32, 1));
   };
 
   auto forward(torch::Tensor x) -> std::pair<torch::Tensor, torch::Tensor> {
