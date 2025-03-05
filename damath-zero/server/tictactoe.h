@@ -5,6 +5,7 @@
 #include <glaze/ext/jsonrpc.hpp>
 
 #include "damath-zero/base/storage.h"
+#include "damath-zero/base/types.h"
 #include "damath-zero/games/tictactoe/board.h"
 
 using namespace DamathZero;
@@ -25,11 +26,11 @@ struct GameStorage : Base::Storage<GameId, Game> {
 
 struct New {
   struct Request {};
+};
 
-  struct Response {
+struct Get {
+  struct Request {
     i32 id;
-    std::array<i8, 9> board;
-    u8 player;
   };
 };
 
@@ -38,11 +39,13 @@ struct Move {
     i32 id;
     i32 cell;
   };
+};
 
-  struct Response {
-    std::array<i8, 9> board;
-    u8 player;
-  };
+struct Response {
+  i32 id;
+  std::array<i8, 9> board;
+  i8 player;
+  i8 result;
 };
 
 class GameServer {
@@ -53,8 +56,9 @@ class GameServer {
 
  private:
   httplib::Server http_server_;
-  glz::rpc::server<glz::rpc::method<"new", New::Request, New::Response>,
-                   glz::rpc::method<"move", Move::Request, Move::Response>>
+  glz::rpc::server<glz::rpc::method<"new", New::Request, Response>,
+                   glz::rpc::method<"get", Get::Request, Response>,
+                   glz::rpc::method<"move", Move::Request, Response>>
       rpc_server_;
 
   GameStorage games_;

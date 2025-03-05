@@ -19,10 +19,10 @@ inline const ActionId ActionId::Invalid = ActionId(-1);
 
 class Player {
  public:
-  enum Value : u8 {
-    First = 0,
-    Second = 1,
-    Invalid = 2,
+  enum Value : i8 {
+    First = 1,
+    Second = -1,
+    Invalid = 0,
   };
   constexpr Player(Value value) : value_(value) {}
 
@@ -34,7 +34,7 @@ class Player {
     return value_ == Value::First ? Player::Second : Player::First;
   }
 
-  constexpr auto value() const -> u8 { return value_; }
+  constexpr auto value() const -> i8 { return value_; }
 
  private:
   constexpr Player() {}
@@ -43,10 +43,11 @@ class Player {
   Value value_;
 };
 
-enum class GameResult {
-  Win,
-  Loss,
-  Draw,
+enum class GameResult : i8 {
+  Win = 1,
+  Draw = 0,
+  Loss = -1,
+  Invalid = -2,
 };
 
 // A Board represents the current state or snapshot of the game.

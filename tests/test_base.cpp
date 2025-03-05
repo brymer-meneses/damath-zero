@@ -25,6 +25,8 @@ TEST(Base, Storage) {
   auto node_id1 = nodes.create(1);
   auto node_id2 = nodes.create(2);
 
+  EXPECT_NE(node_id1.value(), node_id2.value());
+
   EXPECT_EQ(nodes.get(node_id1).num, 1);
   EXPECT_EQ(nodes.get(node_id2).num, 2);
 }
