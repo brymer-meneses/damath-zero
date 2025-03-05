@@ -4,6 +4,8 @@
 #include <torch/torch.h>
 
 #include <glaze/glaze.hpp>
+#include <string_view>
+
 #include "damath-zero/base/id.h"
 
 namespace DamathZero::Core {
@@ -35,8 +37,7 @@ class Player {
 
   constexpr auto value() const -> i8 { return value_; }
 
-public:
-
+ public:
  private:
   constexpr Player() = default;
 
@@ -76,19 +77,17 @@ concept Board = requires(B b, ActionId id, Player player) {
 }  // namespace DamathZero::Core
 
 template <>
-struct glz::meta<DamathZero::Core::Player>
-{
-   using Player = DamathZero::Core::Player;
-   static constexpr auto write_value = [](const Player&& p) -> std::string_view {
-       if (p == Player::First) {
-           return "first";
-       } else if (p == Player::Second) {
-           return "second";
-       } else {
-           return "invalid";
-       }
-   };
-   static constexpr auto value = object("player",  &write_value);
+struct glz::meta<DamathZero::Core::Player> {
+  using Player = DamathZero::Core::Player;
+  static constexpr auto value = [](auto& p) -> std::string_view {
+    if (p == Player::First) {
+      return "first";
+    } else if (p == Player::Second) {
+      return "second";
+    } else {
+      return "invalid";
+    }
+  };
 };
 
 #endif  // !DAMATH_ZERO_CORE_BOARD_H

@@ -29,5 +29,12 @@ struct Board {
 REQUIRE_CONCEPT(Core::Board, Board);
 
 }  // namespace DamathZero::Games::TicTacToe
+//
+template <>
+struct glz::meta<DamathZero::Games::TicTacToe::Board> {
+  using Board = DamathZero::Games::TicTacToe::Board;
+
+  static constexpr auto value{&Board::data};
+};
 
 #endif  // !DAMATH_ZERO_GAMES_TICTACTOE_H

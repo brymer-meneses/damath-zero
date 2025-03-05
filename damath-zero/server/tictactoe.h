@@ -52,7 +52,7 @@ class GameServer {
  public:
   auto start() -> void;
 
-  constexpr GameServer(std::string_view hostname = "0.0.0.0", u16 port = 8080)
+  GameServer(std::string_view hostname = "0.0.0.0", u16 port = 8080)
       : ws_(port, hostname.data()) {}
 
  private:
@@ -63,4 +63,11 @@ class GameServer {
       rpc_server_;
 
   GameStorage games_;
+};
+
+template <>
+struct glz::meta<Response> {
+  using T = Response;
+  static constexpr auto value =
+      object(&T::id, &T::board, &T::player, &T::result);
 };
