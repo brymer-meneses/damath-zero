@@ -21,8 +21,8 @@ class Trainer {
 
  private:
   auto run_selfplay() -> void;
-  auto play_game(Network network) -> void;
-  auto update_weights(Network network) -> void;
+  auto play_game(Network& network) -> void;
+  auto update_weights(Network& network) -> void;
   auto train_network() -> void;
 
  private:
@@ -47,7 +47,7 @@ auto Trainer<Board, Network>::train() -> void {
 }
 
 template <Board Board, Network Network>
-auto Trainer<Board, Network>::play_game(Network network) -> void {
+auto Trainer<Board, Network>::play_game(Network& network) -> void {
   Game game;
   while (not game.is_terminal() and game.history_size() < config_.max_moves) {
     auto mcts = MCTS(config_);
@@ -79,16 +79,26 @@ auto Trainer<Board, Network>::train_network() -> void {
       networks_.save(i, network);
     update_weights(network);
   }
-  networks_.save(config_.training_steps, network);
+  networks_.save(config_.training_steps, std::move(network));
 }
 
 template <Board Board, Network Network>
-auto Trainer<Board, Network>::update_weights(Network network) -> void {
+auto Trainer<Board, Network>::update_weights(Network& network) -> void {
+  namespace F = torch::nn::functional;
+
   auto batch = replay_buffer_.sample_batch();
-  auto loss = 0.0;
+  auto loss = torch::tensor({0.0});
+  torch::optim::SGD optimizer(network.parameters(),
+                              torch::optim::SGDOptions(0.2));
 
   for (auto [feature, target] : batch) {
     auto [value, policy] = network.forward(feature);
+    loss += F::mse_loss(value, torch::tensor(target.value)) +
+            F::binary_cross_entropy_with_logits(policy, target.policy);
+
+    loss.backward();
+    optimizer.step();
+    optimizer.zero_grad();
   }
 }
 

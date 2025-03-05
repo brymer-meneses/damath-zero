@@ -9,7 +9,7 @@ using namespace DamathZero;
 
 auto GameServer::listen(std::string_view hostname, u16 port) -> void {
   std::println("Listening on http://{}:{}...", hostname, port);
-  if (not http_server_.listen("localhost", port)) {
+  if (not http_server_.listen(hostname.data(), port)) {
     std::println("Failed to start server.");
   }
 }

@@ -12,7 +12,7 @@ namespace DamathZero::Core {
 
 struct ActionId;
 
-struct NodeId : Base::Id {
+struct NodeId : Base::Id<NodeId> {
   using Id::Id;
 
   static const NodeId Invalid;
