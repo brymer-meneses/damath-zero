@@ -27,8 +27,7 @@ template <typename T>
 struct Id<T>::glaze {
   using U = Id<T>;
 
-  static constexpr auto value =
-      glz::object("name", &glz::name_v<T>, "value", &U::value_);
+  static constexpr auto value { &U::value_ };
 };
 
 }  // namespace DamathZero::Base

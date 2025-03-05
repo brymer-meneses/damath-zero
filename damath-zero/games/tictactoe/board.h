@@ -11,12 +11,9 @@
 
 namespace DamathZero::Games::TicTacToe {
 
-class Board {
- public:
-  constexpr explicit Board(std::array<i8, 9> board) : board_(board) {}
+struct Board {
+  constexpr explicit Board(std::array<i8, 9> data) : data(data) {}
   constexpr Board() = default;
-
-  constexpr auto data() const -> std::array<i8, 9> { return board_; }
 
   auto is_terminal(Core::Player) const -> bool;
   auto apply(Core::Player, Core::ActionId) -> std::pair<Core::Player, Board>;
@@ -25,11 +22,8 @@ class Board {
   auto get_feature(Core::Player) const -> torch::Tensor;
   auto get_legal_actions(Core::Player) const -> std::vector<Core::ActionId>;
 
- public:
   static const u64 ActionSize = 9;
-
- private:
-  std::array<i8, 9> board_ = {0};
+  std::array<i8, 9> data = {0};
 };
 
 REQUIRE_CONCEPT(Core::Board, Board);

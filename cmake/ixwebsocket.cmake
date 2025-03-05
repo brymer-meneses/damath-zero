@@ -1,4 +1,4 @@
-FetchContent_Declare(httplib
-    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib
+FetchContent_Declare(ixwebsocket
+    GIT_REPOSITORY https://github.com/machinezone/IXWebSocket
     GIT_TAG master)
-FetchContent_MakeAvailable(httplib)
+FetchContent_MakeAvailable(ixwebsocket)

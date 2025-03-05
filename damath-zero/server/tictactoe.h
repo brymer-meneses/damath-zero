@@ -1,6 +1,6 @@
 #pragma once
 
-#include <httplib.h>
+#include <ixwebsocket/IXWebSocketServer.h>
 
 #include <glaze/ext/jsonrpc.hpp>
 
@@ -30,32 +30,33 @@ struct New {
 
 struct Get {
   struct Request {
-    i32 id;
+    GameId id;
   };
 };
 
 struct Move {
   struct Request {
-    i32 id;
+    GameId id;
     i32 cell;
   };
 };
 
 struct Response {
-  i32 id;
-  std::array<i8, 9> board;
-  i8 player;
-  i8 result;
+  GameId id;
+  TicTacToe::Board board;
+  Core::Player player;
+  Core::GameResult result;
 };
 
 class GameServer {
  public:
-  auto listen(std::string_view hostname = "localhost", u16 port = 8080) -> void;
+  auto start() -> void;
 
-  GameServer();
+  constexpr GameServer(std::string_view hostname = "0.0.0.0", u16 port = 8080)
+      : ws_(port, hostname.data()) {}
 
  private:
-  httplib::Server http_server_;
+  ix::WebSocketServer ws_;
   glz::rpc::server<glz::rpc::method<"new", New::Request, Response>,
                    glz::rpc::method<"get", Get::Request, Response>,
                    glz::rpc::method<"move", Move::Request, Response>>
