@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_BASE_STORAGE_H
-#define DAMATH_ZERO_BASE_STORAGE_H
+#pragma once
 
 #include <concepts>
 #include <utility>
@@ -10,7 +9,7 @@
 namespace DamathZero::Base {
 
 template <typename IdType, typename ValueType>
-  requires std::derived_from<IdType, Id<IdType>>
+  requires std::derived_from<IdType, Id>
 class Storage {
  public:
   auto get(IdType id) -> ValueType& {
@@ -34,5 +33,3 @@ class Storage {
 };
 
 }  // namespace DamathZero::Base
-
-#endif  // !DAMATH_ZERO_BASE_STORAGE_H

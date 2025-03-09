@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_NETWORK_H
-#define DAMATH_ZERO_CORE_NETWORK_H
+#pragma once
 
 #include <torch/torch.h>
 
@@ -7,7 +6,7 @@
 
 namespace DamathZero::Core {
 
-struct CheckpointId : Base::Id<CheckpointId> {
+struct CheckpointId : Base::Id {
   using Id::Id;
 };
 
@@ -44,5 +43,3 @@ auto NetworkStorage<Network>::save(CheckpointId id, Network network) -> void {
 }
 
 }  // namespace DamathZero::Core
-
-#endif  // !DAMATH_ZERO_CORE_NETWORK_H

@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_MCTS_H
-#define DAMATH_ZERO_CORE_MCTS_H
+#pragma once
 
 #include <torch/torch.h>
 
@@ -101,5 +100,3 @@ auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
 }
 
 }  // namespace DamathZero::Core
-
-#endif  // !DAMATH_ZERO_CORE_MCTS_H

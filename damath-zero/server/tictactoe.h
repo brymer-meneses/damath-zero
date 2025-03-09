@@ -11,7 +11,7 @@
 using namespace DamathZero;
 using namespace DamathZero::Games;
 
-struct GameId : Base::Id<GameId> {
+struct GameId : Base::Id {
   using Id::Id;
 };
 

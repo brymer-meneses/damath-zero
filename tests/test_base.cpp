@@ -8,7 +8,7 @@ struct Node {
   Node(i32 num) : num(num) {}
 };
 
-struct NodeId : DamathZero::Base::Id<NodeId> {
+struct NodeId : DamathZero::Base::Id {
   using Id::Id;
 
   static const NodeId Invalid;

@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_GAME_H
-#define DAMATH_ZERO_CORE_GAME_H
+#pragma once
 
 #include <torch/torch.h>
 
@@ -13,7 +12,7 @@
 
 namespace DamathZero::Core {
 
-struct StateIndex : Base::Id<StateIndex> {
+struct StateIndex : Base::Id {
   using Id::Id;
 
   constexpr auto is_last() const -> bool { return Id::value() == -1; }
@@ -186,5 +185,3 @@ auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
 };
 
 }  // namespace DamathZero::Core
-
-#endif  // !DAMATH_ZERO_CORE_GAME_H

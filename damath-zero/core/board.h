@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_BOARD_H
-#define DAMATH_ZERO_CORE_BOARD_H
+#pragma once
 
 #include <torch/torch.h>
 
@@ -10,7 +9,7 @@
 
 namespace DamathZero::Core {
 
-struct ActionId : Base::Id<ActionId> {
+struct ActionId : Base::Id {
   using Id::Id;
 
   static const ActionId Invalid;
@@ -89,5 +88,3 @@ struct glz::meta<DamathZero::Core::Player> {
     }
   };
 };
-
-#endif  // !DAMATH_ZERO_CORE_BOARD_H

@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_TRAINER_H
-#define DAMATH_ZERO_CORE_TRAINER_H
+#pragma once
 
 #include <thread>
 
@@ -103,5 +102,3 @@ auto Trainer<Board, Network>::update_weights(Network& network) -> void {
 }
 
 }  // namespace DamathZero::Core
-
-#endif  // !DAMATH_ZERO_CORE_TRAINER_H

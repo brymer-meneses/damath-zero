@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_NODE_H
-#define DAMATH_ZERO_CORE_NODE_H
+#pragma once
 
 #include <glaze/glaze.hpp>
 #include <vector>
@@ -12,7 +11,7 @@ namespace DamathZero::Core {
 
 struct ActionId;
 
-struct NodeId : Base::Id<NodeId> {
+struct NodeId : Base::Id {
   using Id::Id;
 
   static const NodeId Invalid;
@@ -51,5 +50,3 @@ struct NodeStorage : Base::Storage<NodeId, Node> {
 };
 
 }  // namespace DamathZero::Core
-
-#endif  // !DAMATH_ZERO_CORE_NODE_H

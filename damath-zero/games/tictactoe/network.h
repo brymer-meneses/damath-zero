@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_GAMES_TICTACTOE_NETWORK_H
-#define DAMATH_ZERO_GAMES_TICTACTOE_NETWORK_H
+#pragma once
 
 #include <torch/torch.h>
 
@@ -33,5 +32,3 @@ struct Network : torch::nn::Module {
 REQUIRE_CONCEPT(Core::Network, Network);
 
 }  // namespace DamathZero::Games::TicTacToe
-
-#endif  // !DAMATH_ZERO_GAMES_TICTACTOE_NETWORK_H

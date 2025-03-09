@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_CORE_CONFIG_H
-#define DAMATH_ZERO_CORE_CONFIG_H
+#pragma once
 
 #include "damath-zero/base/types.h"
 
@@ -23,5 +22,3 @@ struct Config {
 };
 
 }  // namespace DamathZero::Core
-
-#endif  // !DAMATH_ZERO_CORE_CONFIG_H

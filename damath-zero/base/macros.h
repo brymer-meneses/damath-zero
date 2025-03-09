@@ -1,3 +1,5 @@
+#pragma once
+
 #define REQUIRE_CONCEPT(concept, object) \
   static_assert(concept<object>,         \
                 "The object `" #object   \

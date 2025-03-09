@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_BASE_TYPES_H
-#define DAMATH_ZERO_BASE_TYPES_H
+#pragma once
 
 #include <cstdint>
 
@@ -16,4 +15,3 @@ using i32 = int32_t;
 using f64 = double;
 using f32 = float;
 
-#endif  // !DAMATH_ZERO_BASE_TYPES_H

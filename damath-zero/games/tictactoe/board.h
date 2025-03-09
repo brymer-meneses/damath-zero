@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_GAMES_TICTACTOE_H
-#define DAMATH_ZERO_GAMES_TICTACTOE_H
+#pragma once
 
 #include <torch/torch.h>
 
@@ -36,5 +35,3 @@ struct glz::meta<DamathZero::Games::TicTacToe::Board> {
 
   static constexpr auto value{&Board::data};
 };
-
-#endif  // !DAMATH_ZERO_GAMES_TICTACTOE_H

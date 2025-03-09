@@ -1,5 +1,4 @@
-#ifndef DAMATH_ZERO_BASE_ID_H
-#define DAMATH_ZERO_BASE_ID_H
+#pragma once
 
 #include <glaze/core/common.hpp>
 
@@ -7,7 +6,6 @@
 
 namespace DamathZero::Base {
 
-template <typename T>
 class Id {
  public:
   constexpr Id(i32 value) : value_(value) {}
@@ -23,13 +21,10 @@ class Id {
   struct glaze;
 };
 
-template <typename T>
-struct Id<T>::glaze {
-  using U = Id<T>;
+struct Id::glaze {
+  using T = Id;
 
-  static constexpr auto value { &U::value_ };
+  static constexpr auto value{&T::value_};
 };
 
 }  // namespace DamathZero::Base
-
-#endif  // !DAMATH_ZERO_BASE_INDEX_H
