@@ -8,7 +8,11 @@
 
 #include "damath-zero/base/storage.h"
 #include "damath-zero/base/types.h"
+#include "damath-zero/core/config.h"
+#include "damath-zero/core/mcts.h"
+#include "damath-zero/core/trainer.h"
 #include "damath-zero/games/tictactoe/board.h"
+#include "damath-zero/games/tictactoe/network.h"
 #include "damath-zero/server/rpc.h"
 
 namespace DamathZero::Games::TicTacToe {
@@ -28,6 +32,8 @@ struct GameStorage : Base::Storage<GameId, Game> {
 
 struct Context {
   GameStorage games;
+  Core::Trainer<TicTacToe::Board, TicTacToe::Network> trainer =
+      Core::Trainer<TicTacToe::Board, TicTacToe::Network>(Core::Config{});
 };
 
 struct Response {
@@ -107,6 +113,15 @@ struct Move {
     auto [player, board] =
         game.board.apply(game.player, Core::ActionId{request.cell});
 
+    if (not game.board.is_terminal(player)) {
+      auto mcts = Core::MCTS(context->trainer.config);
+      auto root_id =
+          mcts.run(player, game.board, context->trainer.networks.get_latest());
+      auto action = mcts.nodes().get(root_id).action_taken;
+      std::tie(player, board) =
+          game.board.apply(game.player, Core::ActionId{request.cell});
+    }
+
     game.board = board;
     game.player = player;
 
@@ -114,7 +129,7 @@ struct Move {
         .id = id,
         .board = board,
         .player = player,
-        .result = board.get_result(player),
+        .result = board.get_result(Core::Player::First),
     };
   }
 };
@@ -126,14 +141,13 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
       : ws_{port, hostname.data()}, Rpc(Context{}) {}
 
   auto start() -> void {
+    auto train = std::thread([this]() { context_.trainer.train(); });
+
     ws_.setOnClientMessageCallback(
         [this](std::shared_ptr<ix::ConnectionState> connectionState,
                ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
           if (msg->type == ix::WebSocketMessageType::Message) {
             auto result = call(msg->str);
-            std::println("Received: {}", msg->str);
-            std::println("Sent: {}", result);
-
             webSocket.send(result, msg->binary);
           }
         });
@@ -153,6 +167,7 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
 
  private:
   ix::WebSocketServer ws_;
+  Context context_;
 };
 
 }  // namespace DamathZero::Games::TicTacToe

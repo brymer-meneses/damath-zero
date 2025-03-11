@@ -15,7 +15,7 @@ class Trainer {
   using Game = Game<Board>;
 
  public:
-  Trainer(Config config) : config_(config), replay_buffer_(config) {}
+  Trainer(Config config) : config(config), replay_buffer(config) {}
   auto train() -> void;
 
  private:
@@ -24,17 +24,17 @@ class Trainer {
   auto update_weights(Network& network) -> void;
   auto train_network() -> void;
 
- private:
-  Config config_;
-  NetworkStorage<Network> networks_;
-  ReplayBuffer<Board> replay_buffer_;
+ public:
+  Config config;
+  NetworkStorage<Network> networks;
+  ReplayBuffer<Board> replay_buffer;
 };
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::train() -> void {
   std::vector<std::thread> threads;
 
-  for (auto i = 0; i < config_.num_actors; i++) {
+  for (auto i = 0; i < config.num_actors; i++) {
     threads.push_back(
         std::thread(&Trainer<Board, Network>::run_selfplay, this));
   }
@@ -48,8 +48,8 @@ auto Trainer<Board, Network>::train() -> void {
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::play_game(Network& network) -> void {
   Game game;
-  while (not game.is_terminal() and game.history_size() < config_.max_moves) {
-    auto mcts = MCTS(config_);
+  while (not game.is_terminal() and game.history_size() < config.max_moves) {
+    auto mcts = MCTS(config);
     auto player = game.to_play();
     auto root_id = mcts.run(player, game.board(), network);
     auto action = mcts.nodes().get(root_id).action_taken;
@@ -58,13 +58,13 @@ auto Trainer<Board, Network>::play_game(Network& network) -> void {
     game.store_search_statistics(mcts.nodes(), root_id);
   }
 
-  replay_buffer_.save_game(std::move(game));
+  replay_buffer.save_game(std::move(game));
 }
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::run_selfplay() -> void {
   while (true) {
-    auto network = networks_.get_latest();
+    auto network = networks.get_latest();
     play_game(network);
   }
 }
@@ -73,19 +73,19 @@ template <Board Board, Network Network>
 auto Trainer<Board, Network>::train_network() -> void {
   auto network = Network();
 
-  for (auto i = 0; i < config_.training_steps; i++) {
-    if (i % config_.checkpoint_interval == 0)
-      networks_.save(i, network);
+  for (auto i = 0; i < config.training_steps; i++) {
+    if (i % config.checkpoint_interval == 0)
+      networks.save(i, network);
     update_weights(network);
   }
-  networks_.save(config_.training_steps, std::move(network));
+  networks.save(config.training_steps, std::move(network));
 }
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::update_weights(Network& network) -> void {
   namespace F = torch::nn::functional;
 
-  auto batch = replay_buffer_.sample_batch();
+  auto batch = replay_buffer.sample_batch();
   auto loss = torch::tensor({0.0});
   torch::optim::SGD optimizer(network.parameters(),
                               torch::optim::SGDOptions(0.2));
