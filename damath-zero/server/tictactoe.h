@@ -117,8 +117,7 @@ struct Move {
       auto root_id =
           mcts.run(player, game.board, context->trainer->networks.get_latest());
       auto action = mcts.nodes().get(root_id).action_taken;
-      std::tie(player, board) =
-          game.board.apply(game.player, Core::ActionId{request.cell});
+      std::tie(player, board) = game.board.apply(player, action);
     }
 
     game.board = board;

@@ -35,7 +35,8 @@ auto Board::get_result(Core::Player player) const -> Core::GameResult {
     return Core::GameResult::Loss;
   else if (std::ranges::none_of(data, [](auto x) { return x == 0; }))
     return Core::GameResult::Draw;
-  std::unreachable();
+  else
+    return Core::GameResult::Invalid;
 }
 
 auto Board::is_terminal(Core::Player) const -> bool {

@@ -25,7 +25,7 @@ export default function Board({ id }: { id: number }) {
       <main className="flex flex-col justify-center items-center p-10">
         {state.result === 0 && <div>Draw!</div>}
         {state.result === 1 && <div>X wins!</div>}
-        {state.result === 2 && <div>O wins!</div>}
+        {state.result === -1 && <div>O wins!</div>}
         <NewGame />
       </main>
     );
