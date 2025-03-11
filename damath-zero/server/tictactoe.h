@@ -3,13 +3,15 @@
 #include <ixwebsocket/IXWebSocketServer.h>
 
 #include <glaze/ext/jsonrpc.hpp>
+#include <glaze/util/expected.hpp>
+#include <memory>
 
 #include "damath-zero/base/storage.h"
 #include "damath-zero/base/types.h"
 #include "damath-zero/games/tictactoe/board.h"
+#include "damath-zero/server/rpc.h"
 
-using namespace DamathZero;
-using namespace DamathZero::Games;
+namespace DamathZero::Games::TicTacToe {
 
 struct GameId : Base::Id {
   using Id::Id;
@@ -24,21 +26,8 @@ struct GameStorage : Base::Storage<GameId, Game> {
   using Storage::Storage;
 };
 
-struct New {
-  struct Request {};
-};
-
-struct Get {
-  struct Request {
-    GameId id;
-  };
-};
-
-struct Move {
-  struct Request {
-    GameId id;
-    i32 cell;
-  };
+struct Context {
+  GameStorage games;
 };
 
 struct Response {
@@ -48,26 +37,129 @@ struct Response {
   Core::GameResult result;
 };
 
-class GameServer {
- public:
-  auto start() -> void;
+struct New {
+  struct Request {};
+  using Response = Response;
 
-  GameServer(std::string_view hostname = "0.0.0.0", u16 port = 8080)
-      : ws_(port, hostname.data()) {}
+  static constexpr glz::string_literal method = "new";
+
+  static auto handle(std::shared_ptr<Context> context, const Request& request)
+      -> glz::expected<Response, glz::rpc::error> {
+    auto id = context->games.create();
+    auto& game = context->games.get(id);
+    Core::Player player = Core::Player::First;
+
+    return Response{
+        .id = id,
+        .board = game.board,
+        .player = player,
+        .result = game.board.get_result(player),
+    };
+  }
+};
+
+struct Get {
+  struct Request {
+    GameId id;
+  };
+  using Response = Response;
+
+  static constexpr glz::string_literal method = "get";
+
+  static auto handle(std::shared_ptr<Context> context, const Request& request)
+      -> glz::expected<Response, glz::rpc::error> {
+    auto id = context->games.create();
+    auto& game = context->games.get(id);
+    Core::Player player = Core::Player::First;
+
+    return Response{
+        .id = id,
+        .board = game.board,
+        .player = player,
+        .result = game.board.get_result(player),
+    };
+  }
+};
+
+struct Move {
+  struct Request {
+    GameId id;
+    i32 cell;
+  };
+  using Response = Response;
+
+  static constexpr glz::string_literal method = "move";
+
+  static auto handle(std::shared_ptr<Context> context, const Request& request)
+      -> glz::expected<Response, glz::rpc::error> {
+    auto id = GameId{request.id};
+    auto& game = context->games.get(id);
+
+    if (game.board.is_terminal(game.player)) {
+      return Response{
+          .id = id,
+          .board = game.board,
+          .player = game.player,
+          .result = game.board.get_result(game.player),
+      };
+    };
+
+    auto [player, board] =
+        game.board.apply(game.player, Core::ActionId{request.cell});
+
+    game.board = board;
+    game.player = player;
+
+    return Response{
+        .id = id,
+        .board = board,
+        .player = player,
+        .result = board.get_result(player),
+    };
+  }
+};
+
+struct Server : Rpc::Rpc<Context, New, Get, Move> {
+  using Rpc::Rpc;
+
+  Server(std::string_view hostname = "0.0.0.0", u16 port = 8080)
+      : ws_{port, hostname.data()}, Rpc(Context{}) {}
+
+  auto start() -> void {
+    ws_.setOnClientMessageCallback(
+        [this](std::shared_ptr<ix::ConnectionState> connectionState,
+               ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
+          if (msg->type == ix::WebSocketMessageType::Message) {
+            auto result = call(msg->str);
+            std::println("Received: {}", msg->str);
+            std::println("Sent: {}", result);
+
+            webSocket.send(result, msg->binary);
+          }
+        });
+
+    auto res = ws_.listen();
+    std::println("Listening on ws://{}:{}", ws_.getHost(), ws_.getPort());
+    if (!res.first) {
+      std::println("Failed to listen on ws://{}:{}", ws_.getHost(),
+                   ws_.getPort());
+      std::println("Error: {}", res.second);
+      return;
+    }
+
+    ws_.start();
+    ws_.wait();
+  }
 
  private:
   ix::WebSocketServer ws_;
-  glz::rpc::server<glz::rpc::method<"new", New::Request, Response>,
-                   glz::rpc::method<"get", Get::Request, Response>,
-                   glz::rpc::method<"move", Move::Request, Response>>
-      rpc_server_;
-
-  GameStorage games_;
 };
 
+}  // namespace DamathZero::Games::TicTacToe
+
 template <>
-struct glz::meta<Response> {
-  using T = Response;
+struct glz::meta<DamathZero::Games::TicTacToe::Response> {
+  using T = DamathZero::Games::TicTacToe::Response;
   static constexpr auto value =
       object(&T::id, &T::board, &T::player, &T::result);
 };
