@@ -10,7 +10,7 @@ struct Config {
   f64 c_init = 1.25;
 
   i32 num_simulations = 10;
-  i32 max_moves = 9;
+  i32 max_moves = 100;
 
   i32 num_actors = 1;
 

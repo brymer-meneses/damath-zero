@@ -83,7 +83,8 @@ template <Board Board>
 auto Game<Board>::get_target(StateIndex state_index) const -> Target {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
-  auto [to_play, board] = history_[index];
+  auto to_play = history_[index].to_play;
+  auto board = history_.back().board;
 
   f64 value;
   switch (board.get_result(to_play)) {
@@ -95,6 +96,9 @@ auto Game<Board>::get_target(StateIndex state_index) const -> Target {
       break;
     case GameResult::Draw:
       value = 0;
+      break;
+    case GameResult::Invalid:
+      value = -2;
       break;
   }
 
@@ -177,7 +181,9 @@ auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
   for (auto i = 0; i < config_.batch_size; i++) {
     auto game_index = sampled_indices[i].template item<i64>();
     auto& game = games_[game_index];
-    auto random_position = StateIndex(std::rand() % game.history_size());
+    auto random_position =
+        StateIndex(torch::randint(0, game.history_size(), {1})
+                       .template item<i32>());  // TODO: config.tau0 for a
 
     batch.emplace_back(game.get_feature(random_position),
                        game.get_target(random_position));

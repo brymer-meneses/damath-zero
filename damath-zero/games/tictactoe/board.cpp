@@ -19,33 +19,33 @@ static constexpr std::array<std::array<int, 3>, 8> win_conditions{{
 }};
 
 auto Board::get_result(Core::Player player) const -> Core::GameResult {
-  if (not is_terminal(player))
-    return Core::GameResult::Invalid;
-
   auto did_win = [this](auto player) {
-    return std::ranges::any_of(win_conditions, [&](auto board) {
-      return board[0] == board[1] and board[1] == board[2] and
-             board[0] == player.value();
-    });
+    for (const auto& [x, y, z] : win_conditions) {
+      if (data[x] == data[y] and data[y] == data[z] and
+          data[x] == player.value())
+        return true;
+    }
+
+    return false;
   };
 
   if (did_win(player))
     return Core::GameResult::Win;
   else if (did_win(player.next()))
     return Core::GameResult::Loss;
-  else if (std::ranges::all_of(data, [](auto x) { return x != 0; }))
+  else if (std::ranges::none_of(data, [](auto x) { return x == 0; }))
     return Core::GameResult::Draw;
   std::unreachable();
 }
 
 auto Board::is_terminal(Core::Player) const -> bool {
-  if (std::ranges::all_of(data, [](auto x) { return x != 0; }))
+  if (std::ranges::none_of(data, [](auto x) { return x == 0; }))
     return true;
 
-  if (std::ranges::any_of(win_conditions, [&](auto board) {
-        return board[0] == board[1] and board[1] == board[2] and board[0] != 0;
-      }))
-    return true;
+  for (const auto& [x, y, z] : win_conditions) {
+    if (data[x] == data[y] and data[y] == data[z] and data[x] != 0)
+      return true;
+  }
 
   return false;
 }

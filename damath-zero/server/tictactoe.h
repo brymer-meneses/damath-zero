@@ -32,8 +32,7 @@ struct GameStorage : Base::Storage<GameId, Game> {
 
 struct Context {
   GameStorage games;
-  Core::Trainer<TicTacToe::Board, TicTacToe::Network> trainer =
-      Core::Trainer<TicTacToe::Board, TicTacToe::Network>(Core::Config{});
+  Core::Trainer<TicTacToe::Board, TicTacToe::Network>* trainer;
 };
 
 struct Response {
@@ -114,9 +113,9 @@ struct Move {
         game.board.apply(game.player, Core::ActionId{request.cell});
 
     if (not game.board.is_terminal(player)) {
-      auto mcts = Core::MCTS(context->trainer.config);
+      auto mcts = Core::MCTS(context->trainer->config);
       auto root_id =
-          mcts.run(player, game.board, context->trainer.networks.get_latest());
+          mcts.run(player, game.board, context->trainer->networks.get_latest());
       auto action = mcts.nodes().get(root_id).action_taken;
       std::tie(player, board) =
           game.board.apply(game.player, Core::ActionId{request.cell});
@@ -138,11 +137,13 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
   using Rpc::Rpc;
 
   Server(std::string_view hostname = "0.0.0.0", u16 port = 8080)
-      : ws_{port, hostname.data()}, Rpc(Context{}) {}
+      : ws_{port, hostname.data()},
+        trainer_(Core::Config{}),
+        Rpc(Context{
+            .trainer = &trainer_,
+        }) {}
 
   auto start() -> void {
-    auto train = std::thread([this]() { context_.trainer.train(); });
-
     ws_.setOnClientMessageCallback(
         [this](std::shared_ptr<ix::ConnectionState> connectionState,
                ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
@@ -162,12 +163,14 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
     }
 
     ws_.start();
+
+    trainer_.train();
     ws_.wait();
   }
 
  private:
   ix::WebSocketServer ws_;
-  Context context_;
+  Core::Trainer<TicTacToe::Board, TicTacToe::Network> trainer_;
 };
 
 }  // namespace DamathZero::Games::TicTacToe
