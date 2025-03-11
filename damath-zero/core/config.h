@@ -6,19 +6,19 @@ namespace DamathZero::Core {
 
 struct Config {
   // PUCT formula
-  f64 c_base;
-  f64 c_init;
+  f64 c_base = 19652;
+  f64 c_init = 1.25;
 
-  i32 num_simulations;
-  i32 max_moves;
+  i32 num_simulations = 10;
+  i32 max_moves = 9;
 
-  i32 num_actors;
+  i32 num_actors = 1;
 
-  i32 buffer_size;
-  i32 batch_size;
+  i32 buffer_size = 10000;
+  i32 batch_size = 32;
 
-  i32 training_steps;
-  i32 checkpoint_interval;
+  i32 training_steps = 10000;
+  i32 checkpoint_interval = 1000;
 };
 
 }  // namespace DamathZero::Core

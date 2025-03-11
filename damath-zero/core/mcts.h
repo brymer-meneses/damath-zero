@@ -3,7 +3,11 @@
 #include <torch/torch.h>
 
 #include <cassert>
+#include <ostream>
+#include <print>
+#include <ranges>
 #include <span>
+#include <vector>
 
 #include "damath-zero/core/config.h"
 #include "damath-zero/core/network.h"
@@ -43,17 +47,16 @@ auto MCTS::run(Player player, Board auto board, Network auto network)
 
   auto root_id = nodes_.create(0.0);
   auto _ = expand_node(root_id, player, board, network);
+  assert(nodes_.get(root_id).is_expanded());
 
   for (auto i = 0; i < config_.num_simulations; i++) {
     std::vector<NodeId> path;
 
     auto node_id = root_id;
-    auto& node = nodes_.get(node_id);
 
-    while (node.is_expanded()) {
+    while (nodes_.get(node_id).is_expanded()) {
       node_id = select_highest_puct_score(node_id);
-      auto& node = nodes_.get(node_id);
-      auto action_id = node.action_taken;
+      auto action_id = nodes_.get(node_id).action_taken;
       auto [new_player, new_board] = board.apply(player, action_id);
       board = new_board;
       player = new_player;
@@ -72,8 +75,6 @@ auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
                        Network auto network) -> f64 {
   auto [value, policy] = network.forward(board.get_feature(player));
 
-  auto& node = nodes_.get(node_id);
-  node.played_by = player;
   auto legal_actions = board.get_legal_actions(player);
 
   // Create a boolean mask for legal actions
@@ -92,9 +93,13 @@ auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
 
   // Add children nodes with proper probabilities
   for (ActionId action : legal_actions) {
-    auto p = probs[action.value()].item<f64>();
-    node.children.push_back(nodes_.create(action, p));
+    auto p = probs[action.value()].template item<f64>();
+    NodeId child = nodes_.create(action, p);
+    nodes_.get(node_id).children.push_back(child);
   }
+
+  Node& node = nodes_.get(node_id);
+  node.played_by = player;
 
   return value.template item<f64>();
 }

@@ -42,11 +42,9 @@ auto Board::is_terminal(Core::Player) const -> bool {
   if (std::ranges::all_of(data, [](auto x) { return x != 0; }))
     return true;
 
-  if (std::ranges::any_of(win_conditions,
-                  [&](auto board) {
-                    return board[0] == board[1] and board[1] == board[2] and
-                           board[0] != 0;
-                  }))
+  if (std::ranges::any_of(win_conditions, [&](auto board) {
+        return board[0] == board[1] and board[1] == board[2] and board[0] != 0;
+      }))
     return true;
 
   return false;
@@ -59,7 +57,7 @@ auto Board::apply(Core::Player player, Core::ActionId id)
 }
 
 auto Board::get_feature(Core::Player) const -> torch::Tensor {
-  return torch::tensor(data.data());
+  return torch::from_blob(const_cast<i8*>(data.data()), {9}).clone();
 }
 
 auto Board::get_legal_actions(Core::Player) const
@@ -68,7 +66,7 @@ auto Board::get_legal_actions(Core::Player) const
 
   for (auto i = 0; i < data.size(); i++) {
     if (data[i] == 0) {
-        legal_actions.push_back(Core::ActionId(i));
+      legal_actions.push_back(Core::ActionId(i));
     }
   }
 

@@ -34,7 +34,7 @@ class Node {
   }
 
  private:
-  Node() {}
+  constexpr Node() = default;
 
  public:
   i32 visit_count = 0;
@@ -42,7 +42,7 @@ class Node {
   f64 prior = 0;
   f64 value_sum = 0;
   Player played_by = Player::Invalid;
-  std::vector<NodeId> children;
+  std::vector<NodeId> children = {};
 };
 
 struct NodeStorage : Base::Storage<NodeId, Node> {
