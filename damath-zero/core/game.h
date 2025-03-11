@@ -182,7 +182,7 @@ auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
     auto game_index = sampled_indices[i].template item<i64>();
     auto& game = games_[game_index];
     auto random_position =
-        StateIndex(torch::randint(0, game.history_size(), {1})
+        StateIndex(torch::randint(0, game.history_size() - 1, {1})
                        .template item<i32>());  // TODO: config.tau0 for a
 
     batch.emplace_back(game.get_feature(random_position),
