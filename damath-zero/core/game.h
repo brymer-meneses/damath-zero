@@ -141,6 +141,8 @@ class ReplayBuffer {
   auto save_game(Game game) -> void;
   auto sample_batch() const -> std::vector<PredictionPair>;
 
+  constexpr auto size() const -> u64 { return games_.size(); };
+
  private:
   mutable std::mutex mutex_;
   Config config_;

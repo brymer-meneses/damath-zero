@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <thread>
 
 #include "damath-zero/core/board.h"
@@ -35,8 +36,7 @@ auto Trainer<Board, Network>::train() -> void {
   std::vector<std::thread> threads;
 
   for (auto i = 0; i < config_.num_actors; i++) {
-    threads.push_back(
-        std::thread(&Trainer<Board, Network>::run_selfplay, this));
+    threads.push_back(std::thread([this]() { run_selfplay(); }));
   }
 
   // NOTE: we do not need to join the threads since we want the process to stop
@@ -58,20 +58,24 @@ auto Trainer<Board, Network>::play_game(Network& network) -> void {
     game.store_search_statistics(mcts.nodes(), root_id);
   }
 
-  replay_buffer_.save_game(std::move(game));
+  replay_buffer_.save_game(game);
 }
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::run_selfplay() -> void {
   while (true) {
-    auto network = networks_.get_latest();
+    auto& network = networks_.get_latest();
     play_game(network);
   }
 }
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::train_network() -> void {
-  auto network = Network();
+  while (replay_buffer_.size() < config_.batch_size) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  Network network;
 
   for (auto i = 0; i < config_.training_steps; i++) {
     if (i % config_.checkpoint_interval == 0)
