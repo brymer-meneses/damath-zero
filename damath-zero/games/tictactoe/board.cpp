@@ -57,7 +57,7 @@ auto Board::apply(Core::Player player, Core::ActionId id)
 }
 
 auto Board::get_feature(Core::Player) const -> torch::Tensor {
-  return torch::from_blob(const_cast<i8*>(data.data()), {9}).clone();
+  return torch::from_blob(const_cast<i8*>(data.data()), {9});
 }
 
 auto Board::get_legal_actions(Core::Player) const

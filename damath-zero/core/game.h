@@ -24,15 +24,15 @@ inline const StateIndex StateIndex::Last = StateIndex(-1);
 
 struct Target {
   torch::Tensor policy;
-  f64 value;
+  torch::Tensor value;
 };
 
 template <Board Board>
 class Game {
  public:
   auto get_feature(StateIndex state_index) const -> torch::Tensor;
-
-  auto get_target(StateIndex state_index) const -> Target;
+  auto get_child_visits(StateIndex state_index) const -> torch::Tensor;
+  auto get_value(StateIndex state_index) const -> torch::Tensor;
 
   auto store_search_statistics(const NodeStorage& nodes, NodeId root_id)
       -> void;
@@ -72,15 +72,7 @@ auto Game<Board>::apply(ActionId action_id) -> void {
 }
 
 template <Board Board>
-auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
-  auto index =
-      state_index.is_last() ? history_.size() - 1 : state_index.value();
-  const auto [to_play, board] = history_[index];
-  return board.get_feature(to_play);
-}
-
-template <Board Board>
-auto Game<Board>::get_target(StateIndex state_index) const -> Target {
+auto Game<Board>::get_value(StateIndex state_index) const -> torch::Tensor {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
   auto to_play = history_[index].to_play;
@@ -102,7 +94,23 @@ auto Game<Board>::get_target(StateIndex state_index) const -> Target {
       break;
   }
 
-  return {child_visits_[index], value};
+  return torch::tensor({value});
+}
+
+template <Board Board>
+auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
+  auto index =
+      state_index.is_last() ? history_.size() - 1 : state_index.value();
+  const auto [to_play, board] = history_[index];
+  return board.get_feature(to_play);
+}
+
+template <Board Board>
+auto Game<Board>::get_child_visits(StateIndex state_index) const
+    -> torch::Tensor {
+  auto index =
+      state_index.is_last() ? history_.size() - 1 : state_index.value();
+  return child_visits_[index];
 }
 
 template <Board Board>
@@ -116,7 +124,7 @@ auto Game<Board>::store_search_statistics(const NodeStorage& nodes,
       }),
       0, std::plus<u64>());
 
-  auto visits = torch::zeros({Board::ActionSize}, torch::kFloat64);
+  auto visits = torch::zeros({9}, torch::kFloat64);
   for (const auto child_id : root.children) {
     const auto& child = nodes.get(child_id);
     visits[child.action_taken.value()] = child.visit_count / sum_visits;
@@ -125,12 +133,10 @@ auto Game<Board>::store_search_statistics(const NodeStorage& nodes,
   child_visits_.push_back(visits);
 }
 
-struct PredictionPair {
-  torch::Tensor feature;
-  Target target;
-
-  PredictionPair(torch::Tensor feature, Target target)
-      : feature(feature), target(target) {};
+struct Batch {
+  torch::Tensor input_features;
+  torch::Tensor target_values;
+  torch::Tensor target_policies;
 };
 
 template <Board Board>
@@ -143,7 +149,7 @@ class ReplayBuffer {
   };
 
   auto save_game(Game game) -> void;
-  auto sample_batch() const -> std::vector<PredictionPair>;
+  auto sample_batch() const -> Batch;
 
   constexpr auto size() const -> u64 { return games_.size(); };
 
@@ -161,7 +167,7 @@ auto ReplayBuffer<Board>::save_game(Game game) -> void {
 };
 
 template <Board Board>
-auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
+auto ReplayBuffer<Board>::sample_batch() const -> Batch {
   mutex_.lock();
   auto history_sizes = games_ | std::views::transform([](const auto& game) {
                          return game.history_size();
@@ -175,8 +181,13 @@ auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
   auto sampled_indices = torch::multinomial(probabilities, config_.batch_size,
                                             /*replacement=*/false);
 
-  std::vector<PredictionPair> batch;
-  batch.reserve(config_.batch_size);
+  std::vector<torch::Tensor> features;
+  std::vector<torch::Tensor> values;
+  std::vector<torch::Tensor> policies;
+
+  features.reserve(config_.batch_size);
+  values.reserve(config_.batch_size);
+  policies.reserve(config_.batch_size);
 
   for (auto i = 0; i < config_.batch_size; i++) {
     auto game_index = sampled_indices[i].template item<i64>();
@@ -185,11 +196,16 @@ auto ReplayBuffer<Board>::sample_batch() const -> std::vector<PredictionPair> {
         StateIndex(torch::randint(0, game.history_size() - 1, {1})
                        .template item<i32>());  // TODO: config.tau0 for a
 
-    batch.emplace_back(game.get_feature(random_position),
-                       game.get_target(random_position));
+    features.emplace_back(game.get_feature(random_position));
+    values.emplace_back(game.get_value(random_position));
+    policies.emplace_back(game.get_child_visits(random_position));
   }
 
-  return batch;
+  return {
+      .input_features = torch::stack(features, 0),
+      .target_values = torch::stack(values, 0),
+      .target_policies = torch::stack(policies, 0),
+  };
 };
 
 }  // namespace DamathZero::Core

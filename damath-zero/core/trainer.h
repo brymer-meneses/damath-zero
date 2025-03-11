@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <print>
 #include <thread>
 
 #include "damath-zero/core/board.h"
@@ -22,7 +23,8 @@ class Trainer {
  private:
   auto run_selfplay() -> void;
   auto play_game(Network& network) -> void;
-  auto update_weights(Network& network) -> void;
+  auto update_weights(Network& network, torch::optim::Optimizer& optimizer)
+      -> void;
   auto train_network() -> void;
 
  public:
@@ -76,33 +78,34 @@ auto Trainer<Board, Network>::train_network() -> void {
   }
 
   Network network;
+  torch::optim::SGD optimizer(network.parameters(),
+                              torch::optim::SGDOptions(0.2));
 
   for (auto i = 0; i < config.training_steps; i++) {
     if (i % config.checkpoint_interval == 0)
       networks.save(i, network);
-    update_weights(network);
+    update_weights(network, optimizer);
   }
   networks.save(config.training_steps, std::move(network));
 }
 
 template <Board Board, Network Network>
-auto Trainer<Board, Network>::update_weights(Network& network) -> void {
-  namespace F = torch::nn::functional;
+auto Trainer<Board, Network>::update_weights(Network& network,
+                                             torch::optim::Optimizer& optimizer)
+    -> void {
+  optimizer.zero_grad();
+  auto [input_features, target_values, target_policies] =
+      replay_buffer.sample_batch();
+  auto [values, policies] = network.forward(input_features);
+  auto loss = torch::mse_loss(values, target_values) +
+              torch::nn::functional::cross_entropy(policies, target_policies);
 
-  auto batch = replay_buffer.sample_batch();
-  auto loss = torch::tensor({0.0});
-  torch::optim::SGD optimizer(network.parameters(),
-                              torch::optim::SGDOptions(0.2));
+  AT_ASSERT(!std::isnan(loss.template item<f64>()));
 
-  for (auto [feature, target] : batch) {
-    auto [value, policy] = network.forward(feature);
-    loss += F::mse_loss(value, torch::tensor(target.value)) +
-            F::binary_cross_entropy_with_logits(policy, target.policy);
+  loss.backward();
+  optimizer.step();
 
-    loss.backward();
-    optimizer.step();
-    optimizer.zero_grad();
-  }
+  std::println("Loss: {}", loss.template item<f64>());
 }
 
 }  // namespace DamathZero::Core

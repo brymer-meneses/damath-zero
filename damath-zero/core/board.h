@@ -3,6 +3,7 @@
 #include <torch/torch.h>
 
 #include <glaze/glaze.hpp>
+#include <initializer_list>
 #include <string_view>
 
 #include "damath-zero/base/id.h"
@@ -70,7 +71,8 @@ concept Board = requires(B b, ActionId id, Player player) {
   { b.get_feature(player) } -> std::same_as<torch::Tensor>;
   { b.get_legal_actions(player) } -> std::same_as<std::vector<ActionId>>;
 
-  std::is_same_v<decltype(B::ActionSize), u64>;
+  std::is_same_v<decltype(B::ActionSize), at::IntArrayRef>;
+  std::is_same_v<decltype(B::FeatureShape), at::IntArrayRef>;
 };
 
 }  // namespace DamathZero::Core

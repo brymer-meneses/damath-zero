@@ -32,7 +32,7 @@ struct GameStorage : Base::Storage<GameId, Game> {
 
 struct Context {
   GameStorage games;
-  Core::Trainer<TicTacToe::Board, TicTacToe::Network>* trainer;
+  std::shared_ptr<Core::Trainer<TicTacToe::Board, TicTacToe::Network>> trainer;
 };
 
 struct Response {
@@ -136,11 +136,15 @@ struct Move {
 struct Server : Rpc::Rpc<Context, New, Get, Move> {
   using Rpc::Rpc;
 
-  Server(std::string_view hostname = "0.0.0.0", u16 port = 8080)
+  Server(std::string_view hostname = "0.0.0.0", u16 port = 8080,
+         std::shared_ptr<Core::Trainer<TicTacToe::Board, TicTacToe::Network>>
+             trainer = std::make_shared<
+                 Core::Trainer<TicTacToe::Board, TicTacToe::Network>>(
+                 Core::Config{}))
       : ws_{port, hostname.data()},
-        trainer_(Core::Config{}),
+        trainer_(trainer),
         Rpc(Context{
-            .trainer = &trainer_,
+            .trainer = trainer,
         }) {}
 
   auto start() -> void {
@@ -164,13 +168,13 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
 
     ws_.start();
 
-    trainer_.train();
+    trainer_->train();
     ws_.wait();
   }
 
  private:
   ix::WebSocketServer ws_;
-  Core::Trainer<TicTacToe::Board, TicTacToe::Network> trainer_;
+  std::shared_ptr<Core::Trainer<TicTacToe::Board, TicTacToe::Network>> trainer_;
 };
 
 }  // namespace DamathZero::Games::TicTacToe
