@@ -18,7 +18,7 @@ struct Config {
   i32 batch_size = 32;
 
   i32 training_steps = 10000000;
-  i32 checkpoint_interval = 1000;
+  i32 checkpoint_interval = 100;
 };
 
 }  // namespace DamathZero::Core

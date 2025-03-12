@@ -21,7 +21,7 @@ class Trainer {
 
  private:
   auto run_selfplay() -> void;
-  auto play_game(Network& network) -> void;
+  auto play_game(Core::Network auto& network) -> void;
   auto train_network() -> void;
 
  public:
@@ -45,7 +45,7 @@ auto Trainer<Board, Network>::train() -> void {
 }
 
 template <Board Board, Network Network>
-auto Trainer<Board, Network>::play_game(Network& network) -> void {
+auto Trainer<Board, Network>::play_game(Core::Network auto& network) -> void {
   Game game;
   while (not game.is_terminal() and game.history_size() < config.max_moves) {
     auto mcts = MCTS(config);
@@ -56,14 +56,19 @@ auto Trainer<Board, Network>::play_game(Network& network) -> void {
     game.apply(action);
     game.store_search_statistics(mcts.nodes(), root_id);
   }
-
   replay_buffer.save_game(std::move(game));
 }
 
 template <Board Board, Network Network>
 auto Trainer<Board, Network>::run_selfplay() -> void {
   while (true) {
-    auto network = networks.get_latest();
+    if (networks.empty()) {
+        UniformNetwork network;
+        play_game(network);
+        continue;
+    }
+
+    auto& network = networks.get_latest();
     play_game(network);
   }
 }
@@ -106,9 +111,6 @@ auto Trainer<Board, Network>::train_network() -> void {
                   policy_criterion(policy, target_policies[batch]);
       train_loss += loss;
 
-      std::cout << policy << std::endl;
-      std::cout << target_policies[batch] << std::endl;
-
       optimizer.zero_grad();
       loss.backward();
       optimizer.step();
@@ -132,10 +134,9 @@ auto Trainer<Board, Network>::train_network() -> void {
     eval_loss /= config.batch_size;
     scheduler.step(eval_loss.item<double>());
 
-    std::cout << "Epoch " << i << ": Train Loss = " << train_loss.item<double>()
-              << " | Eval Loss = " << eval_loss.item<double>() << std::endl;
+    std::println("Epoch {}: Train Loss = {} | Eval Loss = {}", i, train_loss.item<f64>(), eval_loss.item<f64>());
   }
-  networks.save(config.training_steps, std::move(network));
+  networks.save(config.training_steps, network);
 }
 
 }  // namespace DamathZero::Core

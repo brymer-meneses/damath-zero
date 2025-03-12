@@ -21,8 +21,8 @@ struct Board {
   auto get_feature(Core::Player) const -> torch::Tensor;
   auto get_legal_actions(Core::Player) const -> std::vector<Core::ActionId>;
 
-  static constexpr auto ActionSize = {9};
-  static constexpr auto FeatureShape = {9};
+  static constexpr auto ActionSize = 9;
+  static constexpr auto FeatureShape = 9;
 
   std::array<i8, 9> data = {0};
 };

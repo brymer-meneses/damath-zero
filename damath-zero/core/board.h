@@ -3,7 +3,6 @@
 #include <torch/torch.h>
 
 #include <glaze/glaze.hpp>
-#include <initializer_list>
 #include <string_view>
 
 #include "damath-zero/base/id.h"

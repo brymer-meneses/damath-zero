@@ -7,7 +7,7 @@
 
 namespace DamathZero::Games::TicTacToe {
 
-struct Network : torch::nn::Module {
+struct NetworkImpl : public torch::nn::Module {
   Network() {
     l1 = register_module("l1", torch::nn::Linear(9, 64));
     l2 = register_module("l2", torch::nn::Linear(64, 32));
@@ -33,6 +33,7 @@ struct Network : torch::nn::Module {
   torch::nn::Linear policy_head{nullptr};
 };
 
-REQUIRE_CONCEPT(Core::Network, Network);
+TORCH_MODULE(Network);
+REQUIRE_CONCEPT(Core::Network, NetworkImpl);
 
 }  // namespace DamathZero::Games::TicTacToe

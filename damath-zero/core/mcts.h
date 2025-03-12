@@ -30,13 +30,15 @@ class MCTS {
 
   auto backpropagate(std::span<NodeId> path, f64 value, Player player) -> void;
 
-  auto expand_node(NodeId node, Player player, Board auto board,
-                   Network auto network) -> f64;
+  template <Board Board, Network Network>
+  auto expand_node(NodeId node, Player player, Board board,
+                   Network network) -> f64;
 
  private:
   NodeStorage nodes_;
   Config config_;
 };
+
 
 auto MCTS::run(Player player, Board auto board, Network auto network)
     -> NodeId {
@@ -69,14 +71,14 @@ auto MCTS::run(Player player, Board auto board, Network auto network)
   return select_highest_visit_count(root_id);
 }
 
-auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
-                       Network auto network) -> f64 {
+template <Board Board, Network Network>
+auto MCTS::expand_node(NodeId node_id, Player player, Board board,
+                       Network network) -> f64 {
   auto [value, policy] = network.forward(board.get_feature(player));
-
   auto legal_actions = board.get_legal_actions(player);
 
   // Create a boolean mask for legal actions
-  auto legal_mask = torch::zeros({9}, torch::kBool);
+  auto legal_mask = torch::zeros(Board::ActionSize, torch::kBool);
   for (ActionId action : legal_actions) {
     legal_mask[action.value()] = true;
   }
@@ -87,7 +89,7 @@ auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
       torch::full_like(policy, -std::numeric_limits<f64>::infinity()));
 
   // Apply softmax to get probabilities
-  torch::Tensor probs = torch::softmax(masked_policy, 0);
+  torch::Tensor probs = torch::softmax(masked_policy, 0, torch::kFloat64);
 
   // Add children nodes with proper probabilities
   for (ActionId action : legal_actions) {
