@@ -3,9 +3,7 @@
 #include <torch/torch.h>
 
 #include <cassert>
-#include <ostream>
 #include <print>
-#include <ranges>
 #include <span>
 #include <vector>
 
@@ -78,7 +76,7 @@ auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
   auto legal_actions = board.get_legal_actions(player);
 
   // Create a boolean mask for legal actions
-  auto legal_mask = torch::zeros_like(policy, torch::kBool);
+  auto legal_mask = torch::zeros({9}, torch::kBool);
   for (ActionId action : legal_actions) {
     legal_mask[action.value()] = true;
   }
@@ -86,7 +84,7 @@ auto MCTS::expand_node(NodeId node_id, Player player, Board auto board,
   // Use where to mask illegal actions (set to -inf)
   auto masked_policy = torch::where(
       legal_mask, policy,
-      torch::full_like(policy, -std::numeric_limits<float>::infinity()));
+      torch::full_like(policy, -std::numeric_limits<f64>::infinity()));
 
   // Apply softmax to get probabilities
   torch::Tensor probs = torch::softmax(masked_policy, 0);

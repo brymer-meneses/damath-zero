@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <print>
 #include <thread>
 
 #include "damath-zero/core/board.h"
@@ -23,8 +22,6 @@ class Trainer {
  private:
   auto run_selfplay() -> void;
   auto play_game(Network& network) -> void;
-  auto update_weights(Network& network, torch::optim::Optimizer& optimizer)
-      -> void;
   auto train_network() -> void;
 
  public:
@@ -78,34 +75,67 @@ auto Trainer<Board, Network>::train_network() -> void {
   }
 
   Network network;
-  torch::optim::SGD optimizer(network.parameters(),
-                              torch::optim::SGDOptions(0.2));
 
-  for (auto i = 0; i < config.training_steps; i++) {
+  torch::optim::Adam optimizer(network.parameters());
+  torch::optim::ReduceLROnPlateauScheduler scheduler(
+      optimizer, torch::optim::ReduceLROnPlateauScheduler::min, 0.5, 5, 0.0001,
+      torch::optim::ReduceLROnPlateauScheduler::rel, 0, {0.0}, 1e-08, true);
+
+  auto value_criterion = torch::nn::MSELoss();
+  auto policy_criterion = torch::nn::CrossEntropyLoss();
+
+  auto device = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+
+  network.to(device);
+  value_criterion->to(device);
+  policy_criterion->to(device);
+
+  for (auto i = 1; i < config.training_steps; i++) {
     if (i % config.checkpoint_interval == 0)
       networks.save(i, network);
-    update_weights(network, optimizer);
+
+    network.train();
+    auto train_loss = torch::tensor(0.0);
+
+    auto [input_features, target_values, target_policies] =
+        replay_buffer.sample_batch();
+    for (auto batch = 0; batch < config.batch_size; batch++) {
+      auto [value, policy] = network.forward(input_features[batch]);
+
+      auto loss = value_criterion(value, target_values[batch]) +
+                  policy_criterion(policy, target_policies[batch]);
+      train_loss += loss;
+
+      std::cout << policy << std::endl;
+      std::cout << target_policies[batch] << std::endl;
+
+      optimizer.zero_grad();
+      loss.backward();
+      optimizer.step();
+    }
+    train_loss /= config.batch_size;
+
+    network.eval();
+    auto eval_loss = torch::tensor(0.0);
+    {
+      torch::NoGradGuard guard;
+      auto [input_features, target_values, target_policies] =
+          replay_buffer.sample_batch();
+      for (auto batch = 0; batch < config.batch_size; batch++) {
+        auto [value, policy] = network.forward(input_features[batch]);
+
+        auto loss = value_criterion(value, target_values[batch]) +
+                    policy_criterion(policy, target_policies[batch]);
+        eval_loss += loss;
+      }
+    }
+    eval_loss /= config.batch_size;
+    scheduler.step(eval_loss.item<double>());
+
+    std::cout << "Epoch " << i << ": Train Loss = " << train_loss.item<double>()
+              << " | Eval Loss = " << eval_loss.item<double>() << std::endl;
   }
   networks.save(config.training_steps, std::move(network));
-}
-
-template <Board Board, Network Network>
-auto Trainer<Board, Network>::update_weights(Network& network,
-                                             torch::optim::Optimizer& optimizer)
-    -> void {
-  optimizer.zero_grad();
-  auto [input_features, target_values, target_policies] =
-      replay_buffer.sample_batch();
-  auto [values, policies] = network.forward(input_features);
-  auto loss = torch::mse_loss(values, target_values) +
-              torch::nn::functional::cross_entropy(policies, target_policies);
-
-  AT_ASSERT(!std::isnan(loss.template item<f64>()));
-
-  loss.backward();
-  optimizer.step();
-
-  std::println("Loss: {}", loss.template item<f64>());
 }
 
 }  // namespace DamathZero::Core

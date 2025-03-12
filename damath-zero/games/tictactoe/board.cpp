@@ -63,7 +63,7 @@ auto Board::get_feature(Core::Player) const -> torch::Tensor {
 
 auto Board::get_legal_actions(Core::Player) const
     -> std::vector<Core::ActionId> {
-  std::vector<Core::ActionId> legal_actions;
+  std::vector<Core::ActionId> legal_actions = {};
 
   for (auto i = 0; i < data.size(); i++) {
     if (data[i] == 0) {

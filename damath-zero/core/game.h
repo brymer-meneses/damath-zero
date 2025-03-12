@@ -116,18 +116,19 @@ auto Game<Board>::get_child_visits(StateIndex state_index) const
 template <Board Board>
 auto Game<Board>::store_search_statistics(const NodeStorage& nodes,
                                           NodeId root_id) -> void {
-  auto root = nodes.get(root_id);
+  auto& root = nodes.get(root_id);
 
   auto sum_visits = std::ranges::fold_left(
       root.children | std::views::transform([&nodes](NodeId child_id) {
-        return nodes.get(child_id).visit_count;
+        return static_cast<f64>(nodes.get(child_id).visit_count);
       }),
-      0, std::plus<u64>());
+      0.0, std::plus<f64>());
 
   auto visits = torch::zeros({9}, torch::kFloat64);
   for (const auto child_id : root.children) {
     const auto& child = nodes.get(child_id);
-    visits[child.action_taken.value()] = child.visit_count / sum_visits;
+    visits[child.action_taken.value()] =
+        static_cast<f64>(child.visit_count) / sum_visits;
   }
 
   child_visits_.push_back(visits);
