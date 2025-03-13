@@ -33,6 +33,8 @@ enable_testing()
 add_executable(test_runner
   tests/test_base.cpp
   tests/test_mcts.cpp
+
+  damath-zero/games/tictactoe/board.cpp
 )
 
 target_compile_features(test_runner PRIVATE cxx_std_23)

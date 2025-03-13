@@ -26,7 +26,6 @@ class Actor {
   auto run() -> void;
 
  private:
-  auto loop() -> void;
   auto generate_self_play_data(Concepts::Network auto& network) -> void;
 
  private:

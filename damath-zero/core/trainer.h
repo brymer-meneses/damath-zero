@@ -80,10 +80,10 @@ auto Trainer<Board, Network>::train_network() -> void {
     auto [input_features, target_values, target_policies] =
         replay_buffer.sample_batch();
     for (auto batch = 0; batch < config.batch_size; batch++) {
-      auto [value, policy] = network.forward(input_features[batch]);
+      auto [value, policy] = network.forward(input_features);
 
-      auto loss = value_criterion(value, target_values[batch]) +
-                  policy_criterion(policy, target_policies[batch]);
+      auto loss = value_criterion(value, target_values) +
+                  policy_criterion(policy, target_policies);
       train_loss += loss;
 
       optimizer.zero_grad();

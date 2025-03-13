@@ -16,12 +16,17 @@ struct Network : public torch::nn::Module {
     policy_head = register_module("policy_head", torch::nn::Linear(32, 9));
   };
 
-  auto forward(torch::Tensor x) -> std::tuple<torch::Tensor, torch::Tensor> {
+  auto forward(torch::Tensor x) -> std::pair<torch::Tensor, torch::Tensor> {
+    if (x.dim() == 1) {
+      // If x is just [9], make it [1, 9]
+      x = x.unsqueeze(0);
+    }
+
     x = torch::relu(l1->forward(x));
     x = torch::relu(l2->forward(x));
 
-    auto value = torch::relu(value_head->forward(x));
-    auto policy = torch::relu(policy_head->forward(x));
+    auto value = torch::tanh(value_head->forward(x));
+    auto policy = torch::softmax(policy_head->forward(x), 1);
 
     return {value, policy};
   }

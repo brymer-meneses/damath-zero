@@ -2,30 +2,32 @@
 
 #include <torch/torch.h>
 
-#include <format>
-
 #include "damath-zero/base/id.h"
 #include "damath-zero/base/macros.h"
 
 namespace DamathZero::Core {
 
-struct CheckpointId : Base::Id {
-  using Id::Id;
-};
-
 namespace Concepts {
 
 template <typename N>
 concept Network =
-    requires(N n, torch::Tensor t) { std::is_base_of_v<torch::nn::Module, N>; };
+    std::is_base_of_v<torch::nn::Module, N> && requires(N n, torch::Tensor t) {
+      { n.forward(t) } -> std::same_as<std::pair<torch::Tensor, torch::Tensor>>;
+    };
 
 }  // namespace Concepts
 
-struct UniformNetwork : public torch::nn::Module {
+struct CheckpointId : Base::Id {
+  using Id::Id;
+};
+
+struct UniformNetwork : torch::nn::Module {
  public:
-  auto forward(torch::Tensor input)
-      -> std::tuple<torch::Tensor, torch::Tensor> {
-    return {torch::tensor({0.5}), torch::softmax(torch::ones_like(input), 0)};
+  auto forward(torch::Tensor x) -> std::pair<torch::Tensor, torch::Tensor> {
+    if (x.dim() == 1) {
+      x = x.unsqueeze(0);
+    }
+    return {torch::tensor({0.5}), torch::softmax(torch::ones_like(x), 1)};
   }
 };
 
@@ -46,6 +48,8 @@ class NetworkStorage {
 
 template <Concepts::Network Network>
 auto NetworkStorage<Network>::get_latest() -> Network& {
+  assert(not networks_.empty());
+
   std::lock_guard lock(mutex_);
   return networks_.back().second;
 }

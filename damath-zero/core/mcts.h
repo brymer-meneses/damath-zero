@@ -25,7 +25,6 @@ class MCTS {
   constexpr auto nodes() const -> NodeStorage const& { return nodes_; }
   constexpr auto nodes() -> NodeStorage& { return nodes_; };
 
- private:
   auto select_highest_puct_score(NodeId parent) const -> NodeId;
   auto select_highest_visit_count(NodeId parent) const -> NodeId;
   auto compute_puct_score(NodeId parent, NodeId child) const -> f64;
