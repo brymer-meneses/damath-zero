@@ -79,38 +79,23 @@ auto Trainer<Board, Network>::train_network() -> void {
 
     auto [input_features, target_values, target_policies] =
         replay_buffer.sample_batch();
-    for (auto batch = 0; batch < config.batch_size; batch++) {
-      auto [value, policy] = network.forward(input_features);
+    auto [values, policies] = network.forward(input_features);
 
-      auto loss = value_criterion(value, target_values) +
-                  policy_criterion(policy, target_policies);
-      train_loss += loss;
+    assert(values.dim() == target_values.dim());
+    assert(policies.dim() == target_policies.dim());
 
-      optimizer.zero_grad();
-      loss.backward();
-      optimizer.step();
-    }
-    train_loss /= config.batch_size;
+    auto loss = value_criterion(values, target_values) +
+                policy_criterion(policies, target_policies);
 
-    network.eval();
-    auto eval_loss = torch::tensor(0.0);
-    {
-      torch::NoGradGuard guard;
-      auto [input_features, target_values, target_policies] =
-          replay_buffer.sample_batch();
-      for (auto batch = 0; batch < config.batch_size; batch++) {
-        auto [value, policy] = network.forward(input_features[batch]);
+    train_loss += loss;
 
-        auto loss = value_criterion(value, target_values[batch]) +
-                    policy_criterion(policy, target_policies[batch]);
-        eval_loss += loss;
-      }
-    }
-    eval_loss /= config.batch_size;
-    scheduler.step(eval_loss.item<double>());
+    optimizer.zero_grad();
+    loss.backward();
+    optimizer.step();
 
-    std::println("Epoch {}: Train Loss = {} | Eval Loss = {}", i,
-                 train_loss.item<f64>(), eval_loss.item<f64>());
+    scheduler.step(train_loss.item<f64>());
+
+    std::println("Epoch {}: Train Loss = {}", i, train_loss.item<f64>());
   }
   networks.save(config.training_steps, network);
 }

@@ -22,12 +22,8 @@ struct CheckpointId : Base::Id {
 };
 
 struct UniformNetwork : torch::nn::Module {
- public:
   auto forward(torch::Tensor x) -> std::pair<torch::Tensor, torch::Tensor> {
-    if (x.dim() == 1) {
-      x = x.unsqueeze(0);
-    }
-    return {torch::tensor({0.5}), torch::softmax(torch::ones_like(x), 1)};
+    return {torch::tensor({0.5}), torch::softmax(torch::ones_like(x), -1)};
   }
 };
 
