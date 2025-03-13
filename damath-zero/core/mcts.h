@@ -20,6 +20,8 @@ class MCTS {
   auto run(Player previous_player, Board auto board, Network auto network)
       -> NodeId;
 
+  constexpr auto reset() -> void { nodes_.clear(); }
+
   constexpr auto nodes() const -> NodeStorage const& { return nodes_; }
   constexpr auto nodes() -> NodeStorage& { return nodes_; };
 
@@ -31,19 +33,17 @@ class MCTS {
   auto backpropagate(std::span<NodeId> path, f64 value, Player player) -> void;
 
   template <Board Board, Network Network>
-  auto expand_node(NodeId node, Player player, Board board,
-                   Network network) -> f64;
+  auto expand_node(NodeId node, Player player, Board board, Network network)
+      -> f64;
 
  private:
   NodeStorage nodes_;
   Config config_;
 };
 
-
 auto MCTS::run(Player player, Board auto board, Network auto network)
     -> NodeId {
-  // Disable gradient computation.
-  c10::InferenceMode guard(false);
+  torch::NoGradGuard guard;
 
   auto root_id = nodes_.create(0.0);
   auto _ = expand_node(root_id, player, board, network);

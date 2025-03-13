@@ -28,6 +28,8 @@ class Storage {
     return IdType(data_.size() - 1);
   }
 
+  auto clear() -> void { data_.clear(); }
+
  private:
   std::vector<ValueType> data_;
 };

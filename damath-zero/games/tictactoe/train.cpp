@@ -1,4 +1,3 @@
-#include "damath-zero/base/types.h"
 #include "damath-zero/core/trainer.h"
 #include "damath-zero/games/tictactoe/board.h"
 #include "damath-zero/games/tictactoe/network.h"
