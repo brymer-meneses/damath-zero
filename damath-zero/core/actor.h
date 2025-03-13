@@ -11,7 +11,7 @@
 
 namespace DamathZero::Core {
 
-template <Board Board, Network Network>
+template <Concepts::Board Board, Concepts::Network Network>
 class Actor {
  public:
   constexpr Actor(ReplayBuffer<Board>& replay_buffer,
@@ -27,7 +27,7 @@ class Actor {
 
  private:
   auto loop() -> void;
-  auto generate_self_play_data(Core::Network auto& network) -> void;
+  auto generate_self_play_data(Concepts::Network auto& network) -> void;
 
  private:
   NetworkStorage<Network>& networks_;
@@ -37,9 +37,9 @@ class Actor {
   MCTS mcts_;
 };
 
-template <Board Board, Network Network>
-auto Actor<Board, Network>::generate_self_play_data(Core::Network auto& network)
-    -> void {
+template <Concepts::Board Board, Concepts::Network Network>
+auto Actor<Board, Network>::generate_self_play_data(
+    Concepts::Network auto& network) -> void {
   mcts_.reset();
 
   Game<Board> game;
@@ -54,7 +54,7 @@ auto Actor<Board, Network>::generate_self_play_data(Core::Network auto& network)
   replay_buffer_.save_game(std::move(game));
 }
 
-template <Board Board, Network Network>
+template <Concepts::Board Board, Concepts::Network Network>
 auto Actor<Board, Network>::run() -> void {
   while (not should_terminate_) {
     if (networks_.empty()) {

@@ -27,7 +27,7 @@ struct Target {
   torch::Tensor value;
 };
 
-template <Board Board>
+template <Concepts::Board Board>
 class Game {
  public:
   auto get_feature(StateIndex state_index) const -> torch::Tensor;
@@ -65,13 +65,13 @@ class Game {
   std::vector<torch::Tensor> child_visits_;
 };
 
-template <Board Board>
+template <Concepts::Board Board>
 auto Game<Board>::apply(ActionId action_id) -> void {
   auto [to_play, board] = history_.back();
   history_.push_back(board.apply(to_play, action_id));
 }
 
-template <Board Board>
+template <Concepts::Board Board>
 auto Game<Board>::get_value(StateIndex state_index) const -> torch::Tensor {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
@@ -97,7 +97,7 @@ auto Game<Board>::get_value(StateIndex state_index) const -> torch::Tensor {
   return torch::tensor({value});
 }
 
-template <Board Board>
+template <Concepts::Board Board>
 auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
   auto index =
       state_index.is_last() ? history_.size() - 1 : state_index.value();
@@ -105,7 +105,7 @@ auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
   return board.get_feature(to_play);
 }
 
-template <Board Board>
+template <Concepts::Board Board>
 auto Game<Board>::get_child_visits(StateIndex state_index) const
     -> torch::Tensor {
   auto index =
@@ -113,7 +113,7 @@ auto Game<Board>::get_child_visits(StateIndex state_index) const
   return child_visits_[index];
 }
 
-template <Board Board>
+template <Concepts::Board Board>
 auto Game<Board>::store_search_statistics(const NodeStorage& nodes,
                                           NodeId root_id) -> void {
   auto& root = nodes.get(root_id);
@@ -140,7 +140,7 @@ struct Batch {
   torch::Tensor target_policies;
 };
 
-template <Board Board>
+template <Concepts::Board Board>
 class ReplayBuffer {
   using Game = Game<Board>;
 
@@ -160,14 +160,14 @@ class ReplayBuffer {
   std::vector<Game> games_;
 };
 
-template <Board Board>
+template <Concepts::Board Board>
 auto ReplayBuffer<Board>::save_game(Game game) -> void {
   mutex_.lock();
   games_.push_back(std::move(game));
   mutex_.unlock();
 };
 
-template <Board Board>
+template <Concepts::Board Board>
 auto ReplayBuffer<Board>::sample_batch() const -> Batch {
   mutex_.lock();
   auto history_sizes = games_ | std::views::transform([](const auto& game) {

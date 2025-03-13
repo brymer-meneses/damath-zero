@@ -33,6 +33,6 @@ struct Network : public torch::nn::Module {
   torch::nn::Linear policy_head{nullptr};
 };
 
-REQUIRE_CONCEPT(Core::Network, Network);
+REQUIRE_CONCEPT(Core::Concepts::Network, Network);
 
 }  // namespace DamathZero::Games::TicTacToe

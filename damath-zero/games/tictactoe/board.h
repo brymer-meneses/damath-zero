@@ -27,7 +27,7 @@ struct Board {
   std::array<i8, 9> data = {0};
 };
 
-REQUIRE_CONCEPT(Core::Board, Board);
+REQUIRE_CONCEPT(Core::Concepts::Board, Board);
 
 }  // namespace DamathZero::Games::TicTacToe
 //

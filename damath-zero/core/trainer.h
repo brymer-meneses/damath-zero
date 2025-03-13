@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <functional>
 #include <thread>
 
 #include "damath-zero/core/actor.h"
@@ -12,7 +11,7 @@
 
 namespace DamathZero::Core {
 
-template <Board Board, Network Network>
+template <Concepts::Board Board, Concepts::Network Network>
 class Trainer {
   using Game = Game<Board>;
   using Actor = Actor<Board, Network>;
@@ -24,7 +23,7 @@ class Trainer {
 
  private:
   auto run_selfplay() -> void;
-  auto play_game(Core::Network auto& network) -> void;
+  auto play_game(Concepts::Network auto& network) -> void;
   auto train_network() -> void;
 
  public:
@@ -33,7 +32,7 @@ class Trainer {
   ReplayBuffer<Board> replay_buffer;
 };
 
-template <Board Board, Network Network>
+template <Concepts::Board Board, Concepts::Network Network>
 auto Trainer<Board, Network>::train() -> void {
   std::vector<std::thread> threads;
   std::atomic<bool> stop;
@@ -49,7 +48,7 @@ auto Trainer<Board, Network>::train() -> void {
   stop = true;
 }
 
-template <Board Board, Network Network>
+template <Concepts::Board Board, Concepts::Network Network>
 auto Trainer<Board, Network>::train_network() -> void {
   while (replay_buffer.size() < config.batch_size) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));

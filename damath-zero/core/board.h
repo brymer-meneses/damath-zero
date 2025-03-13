@@ -51,6 +51,8 @@ enum class GameResult : i8 {
   Invalid = -2,
 };
 
+namespace Concepts {
+
 // A Board represents the current state or snapshot of the game.
 // Meanwhile a Game serves as an object that contains the history of the
 // moves played in the board.
@@ -73,6 +75,8 @@ concept Board = requires(B b, ActionId id, Player player) {
   std::is_same_v<decltype(B::ActionSize), at::IntArrayRef>;
   std::is_same_v<decltype(B::FeatureShape), at::IntArrayRef>;
 };
+
+}  // namespace Concepts
 
 }  // namespace DamathZero::Core
 

@@ -13,9 +13,13 @@ struct CheckpointId : Base::Id {
   using Id::Id;
 };
 
+namespace Concepts {
+
 template <typename N>
 concept Network =
     requires(N n, torch::Tensor t) { std::is_base_of_v<torch::nn::Module, N>; };
+
+}  // namespace Concepts
 
 struct UniformNetwork : public torch::nn::Module {
  public:
@@ -25,9 +29,9 @@ struct UniformNetwork : public torch::nn::Module {
   }
 };
 
-REQUIRE_CONCEPT(Network, UniformNetwork);
+REQUIRE_CONCEPT(Concepts::Network, UniformNetwork);
 
-template <Network Network>
+template <Concepts::Network Network>
 class NetworkStorage {
  public:
   auto get_latest() -> Network&;
@@ -40,13 +44,13 @@ class NetworkStorage {
   std::vector<std::pair<CheckpointId, Network>> networks_;
 };
 
-template <Network Network>
+template <Concepts::Network Network>
 auto NetworkStorage<Network>::get_latest() -> Network& {
   std::lock_guard lock(mutex_);
   return networks_.back().second;
 }
 
-template <Network Network>
+template <Concepts::Network Network>
 auto NetworkStorage<Network>::save(CheckpointId id, Network network) -> void {}
 
 }  // namespace DamathZero::Core
