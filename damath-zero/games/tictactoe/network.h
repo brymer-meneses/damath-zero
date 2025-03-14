@@ -18,8 +18,8 @@ struct Network : public torch::nn::Module {
     x = torch::relu(l1->forward(x));
     x = torch::relu(l2->forward(x));
 
-    auto value = torch::tanh(value_head->forward(x));
-    auto policy = torch::softmax(policy_head->forward(x), -1);
+    auto value = value_head->forward(x);
+    auto policy = policy_head->forward(x);
 
     return {value, policy};
   }

@@ -59,8 +59,9 @@ auto Board::apply(Core::Player player, Core::ActionId id)
 
 auto Board::get_feature(Core::Player player) const -> torch::Tensor {
   if (player == Core::Player::Second)
-    return -torch::from_blob(const_cast<i8*>(data.data()), {9});
-  return torch::from_blob(const_cast<i8*>(data.data()), {9});
+    return -torch::tensor(data, torch::kFloat32);
+
+  return torch::tensor(data, torch::kFloat32);
 }
 
 auto Board::get_legal_actions(Core::Player) const

@@ -59,7 +59,7 @@ auto Trainer<Board, Network>::train_network() -> void {
   torch::optim::Adam optimizer(network->parameters());
   torch::optim::ReduceLROnPlateauScheduler scheduler(
       optimizer, torch::optim::ReduceLROnPlateauScheduler::min, 0.5, 5, 0.0001,
-      torch::optim::ReduceLROnPlateauScheduler::rel, 0, {0.0}, 1e-08, true);
+      torch::optim::ReduceLROnPlateauScheduler::rel, 0, {0.0}, 1e-08, false);
 
   auto value_criterion = torch::nn::MSELoss();
   auto policy_criterion = torch::nn::CrossEntropyLoss();
@@ -83,16 +83,14 @@ auto Trainer<Board, Network>::train_network() -> void {
     auto loss = value_criterion(values, target_values) +
                 policy_criterion(policies, target_policies);
 
-
     optimizer.zero_grad();
     loss.backward();
     optimizer.step();
 
-
     if (i % config.checkpoint_interval == 0) {
-        std::println("Epoch {}: Train Loss = {}", i, loss.template item<f64>());
-        scheduler.step(loss.template item<f64>());
-        networks.save(i, network);
+      std::println("Epoch {}: Train Loss = {}", i, loss.template item<f64>());
+      scheduler.step(loss.template item<f64>());
+      networks.save(i, network);
     }
   }
   networks.save(config.training_steps, network);

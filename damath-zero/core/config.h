@@ -16,7 +16,7 @@ struct Config {
   i32 num_simulations = 100;
   i32 max_moves = 100;
 
-  i32 num_actors = 1;
+  i32 num_actors = 6;
 
   i32 buffer_size = 10000;
   i32 batch_size = 256;

@@ -11,7 +11,7 @@
 namespace DamathZero::Games::TicTacToe {
 
 struct Board {
-  constexpr explicit Board(std::array<i8, 9> data) : data(data) {}
+  constexpr explicit Board(std::vector<i8> data) : data(data) {}
   constexpr Board() = default;
 
   auto is_terminal(Core::Player) const -> bool;
@@ -24,7 +24,7 @@ struct Board {
   static constexpr auto ActionSize = 9;
   static constexpr auto FeatureShape = 9;
 
-  std::array<i8, 9> data = {0};
+  std::vector<i8> data = std::vector<i8>(9, 0);
 };
 
 REQUIRE_CONCEPT(Core::Concepts::Board, Board);
