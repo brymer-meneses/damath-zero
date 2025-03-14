@@ -63,7 +63,8 @@ auto MCTS::run(Player player, Board board, i32 game_history_size,
     while (nodes_.get(node_id).is_expanded()) {
       node_id = select_highest_puct_score(node_id);
       auto action_id = nodes_.get(node_id).action_taken;
-      std::tie(scratch_player, scratch_board) = board.apply(player, action_id);
+      std::tie(scratch_player, scratch_board) =
+          scratch_board.apply(scratch_player, action_id);
       path.push_back(node_id);
     }
 
