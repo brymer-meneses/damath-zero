@@ -71,11 +71,7 @@ auto Trainer<Board, Network>::train_network() -> void {
   policy_criterion->to(device);
 
   for (auto i = 1; i < config.training_steps; i++) {
-    if (i % config.checkpoint_interval == 0)
-      networks.save(i, network);
-
     network->train();
-    auto train_loss = torch::tensor(0.0);
 
     auto [input_features, target_values, target_policies] =
         replay_buffer.sample_batch();
@@ -87,15 +83,17 @@ auto Trainer<Board, Network>::train_network() -> void {
     auto loss = value_criterion(values, target_values) +
                 policy_criterion(policies, target_policies);
 
-    train_loss += loss;
 
     optimizer.zero_grad();
     loss.backward();
     optimizer.step();
 
-    scheduler.step(train_loss.item<f64>());
 
-    std::println("Epoch {}: Train Loss = {}", i, train_loss.item<f64>());
+    if (i % config.checkpoint_interval == 0) {
+        std::println("Epoch {}: Train Loss = {}", i, loss.template item<f64>());
+        scheduler.step(loss.template item<f64>());
+        networks.save(i, network);
+    }
   }
   networks.save(config.training_steps, network);
 }

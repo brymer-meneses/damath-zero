@@ -124,7 +124,7 @@ auto Game<Board>::store_search_statistics(const NodeStorage& nodes,
       }),
       0.0, std::plus<f64>());
 
-  auto visits = torch::zeros({9}, torch::kFloat64);
+  auto visits = torch::zeros(Board::ActionSize, torch::kFloat64);
   for (const auto child_id : root.children) {
     const auto& child = nodes.get(child_id);
     visits[child.action_taken.value()] =
@@ -162,6 +162,8 @@ class ReplayBuffer {
 
 template <Concepts::Board Board>
 auto ReplayBuffer<Board>::save_game(Game game) -> void {
+  assert(game.history_size() > 0);
+
   mutex_.lock();
   games_.push_back(std::move(game));
   mutex_.unlock();
@@ -193,6 +195,8 @@ auto ReplayBuffer<Board>::sample_batch() const -> Batch {
   for (auto i = 0; i < config_.batch_size; i++) {
     auto game_index = sampled_indices[i].template item<i64>();
     auto& game = games_[game_index];
+    assert(game.history_size() > 0);
+
     auto random_position =
         StateIndex(torch::randint(0, game.history_size() - 1, {1})
                        .template item<i32>());  // TODO: config.tau0 for a

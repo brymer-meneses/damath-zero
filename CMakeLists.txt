@@ -9,7 +9,7 @@ include(cmake/torch.cmake)
 
 add_library(damath-zero)
 target_compile_features(damath-zero PRIVATE cxx_std_23)
-target_sources(damath-zero PRIVATE damath-zero/core/mcts.cpp)
+target_sources(damath-zero PRIVATE damath-zero/core/mcts.cpp damath-zero/core/node.cpp)
 target_include_directories(damath-zero PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(damath-zero PUBLIC ${TORCH_LIBRARIES} glaze::glaze)
 

@@ -42,12 +42,13 @@ template <Concepts::Board Board, Concepts::Network Network>
 template <Concepts::Network AnyNetwork>
 auto Actor<Board, Network>::generate_self_play_data(
     std::shared_ptr<AnyNetwork> network) -> void {
-  mcts_.reset();
 
   Game<Board> game;
   while (not game.is_terminal() and game.history_size() < config_.max_moves) {
+    mcts_.reset();
+
     auto player = game.to_play();
-    auto root_id = mcts_.run(player, game.board(), network);
+    auto root_id = mcts_.run(player, game.board(), game.history_size(), network);
     auto action = mcts_.nodes().get(root_id).action_taken;
 
     game.apply(action);

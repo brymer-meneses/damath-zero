@@ -18,22 +18,30 @@ class MCTS {
   MCTS(Config config) : config_(config) {}
 
   template <Concepts::Board Board, Concepts::Network Network>
-  auto run(Player previous_player, Board board, std::shared_ptr<Network> network) -> NodeId;
+  auto run(Player player, Board board, i32 game_history_size,
+           std::shared_ptr<Network> network) -> NodeId;
 
   constexpr auto reset() -> void { nodes_.clear(); }
 
   constexpr auto nodes() const -> NodeStorage const& { return nodes_; }
   constexpr auto nodes() -> NodeStorage& { return nodes_; };
 
+  template <Concepts::Board Board, Concepts::Network Network>
+  auto simulate(NodeId root_id, Player player, Board board,
+                std::shared_ptr<Network> network) -> void;
+
   auto select_highest_puct_score(NodeId parent) const -> NodeId;
-  auto select_highest_visit_count(NodeId parent) const -> NodeId;
+  auto select_highest_visit_count(NodeId parent, i32 game_history_size) const
+      -> NodeId;
   auto compute_puct_score(NodeId parent, NodeId child) const -> f64;
 
   auto backpropagate(std::span<NodeId> path, f64 value, Player player) -> void;
 
   template <Concepts::Board Board, Concepts::Network Network>
-  auto expand_node(NodeId node, Player player, Board board, std::shared_ptr<Network> network)
-      -> f64;
+  auto expand_node(NodeId node, Player player, Board board,
+                   std::shared_ptr<Network> network) -> f64;
+
+  auto add_exploration_noise(NodeId node) -> void;
 
  private:
   NodeStorage nodes_;
@@ -41,16 +49,17 @@ class MCTS {
 };
 
 template <Concepts::Board Board, Concepts::Network Network>
-auto MCTS::run(Player player, Board board, std::shared_ptr<Network> network) -> NodeId {
+auto MCTS::run(Player player, Board board, i32 game_history_size,
+               std::shared_ptr<Network> network) -> NodeId {
   torch::NoGradGuard guard;
 
   auto root_id = nodes_.create(0.0);
   auto _ = expand_node(root_id, player, board, network);
   assert(nodes_.get(root_id).is_expanded());
+  add_exploration_noise(root_id);
 
   for (auto i = 0; i < config_.num_simulations; i++) {
-    std::vector<NodeId> path;
-
+    std::vector<NodeId> path = {root_id};
     auto node_id = root_id;
 
     while (nodes_.get(node_id).is_expanded()) {
@@ -67,7 +76,7 @@ auto MCTS::run(Player player, Board board, std::shared_ptr<Network> network) -> 
     backpropagate(path, value, player);
   }
 
-  return select_highest_visit_count(root_id);
+  return select_highest_visit_count(root_id, game_history_size);
 }
 
 template <Concepts::Board Board, Concepts::Network Network>

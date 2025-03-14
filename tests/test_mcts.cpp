@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <ostream>
 #include <print>
 
 #include "damath-zero/core/config.h"
+#include "damath-zero/core/game.h"
 #include "damath-zero/core/mcts.h"
 #include "damath-zero/core/network.h"
 #include "damath-zero/core/node.h"
@@ -17,7 +19,7 @@ using namespace DamathZero::Core;
 TEST(MCTS, ExpandNode) {
   Config config;
   Board board;
-  auto network= std::make_shared<UniformNetwork>();
+  auto network = std::make_shared<UniformNetwork>();
   Player player = Player::First;
 
   MCTS mcts(config);
@@ -34,7 +36,14 @@ TEST(MCTS, ExpandNode) {
 
   auto i = 0;
   for (auto child_id : root.children) {
-    EXPECT_EQ(storage.get(child_id).prior, 1.0 / 9);
-    EXPECT_EQ(storage.get(child_id).action_taken.value(), i);
+    auto& child = storage.get(child_id);
+
+    EXPECT_NE(child.played_by, root.played_by);
+
+    EXPECT_EQ(child.prior, 1.0 / 9);
+    EXPECT_EQ(child.action_taken.value(), i++);
+    EXPECT_EQ(child.visit_count, 0);
+    EXPECT_EQ(child.value_sum, 0);
+    EXPECT_FALSE(child.is_expanded());
   }
 }

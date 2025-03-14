@@ -27,10 +27,10 @@ class Node {
   constexpr auto is_expanded() const -> bool { return children.size() > 0; }
 
   constexpr auto mean_action_value() const -> f64 {
-    if (visit_count > 0) {
+    if (visit_count == 0) {
       return 0;
     };
-    return value_sum / visit_count;
+    return value_sum / static_cast<f64>(visit_count);
   }
 
  private:
@@ -47,6 +47,8 @@ class Node {
 
 struct NodeStorage : Base::Storage<NodeId, Node> {
   using Storage::Storage;
+
+  auto print_tree(NodeId root, i32 level=0) ->void;
 };
 
 }  // namespace DamathZero::Core

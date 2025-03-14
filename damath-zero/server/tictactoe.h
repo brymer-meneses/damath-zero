@@ -21,12 +21,7 @@ struct GameId : Base::Id {
   using Id::Id;
 };
 
-struct Game {
-  TicTacToe::Board board = TicTacToe::Board{};
-  Core::Player player = Core::Player::First;
-};
-
-struct GameStorage : Base::Storage<GameId, Game> {
+struct GameStorage : Base::Storage<GameId, Core::Game<TicTacToe::Board>> {
   using Storage::Storage;
 };
 
@@ -56,9 +51,9 @@ struct New {
 
     return Response{
         .id = id,
-        .board = game.board,
-        .player = player,
-        .result = game.board.get_result(player),
+        .board = game.board(),
+        .player = game.to_play(),
+        .result = game.board().get_result(player),
     };
   }
 };
@@ -79,9 +74,9 @@ struct Get {
 
     return Response{
         .id = id,
-        .board = game.board,
-        .player = player,
-        .result = game.board.get_result(player),
+        .board = game.board(),
+        .player = game.to_play(),
+        .result = game.board().get_result(player),
     };
   }
 };
@@ -99,35 +94,32 @@ struct Move {
       -> glz::expected<Response, glz::rpc::error> {
     auto id = GameId{request.id};
     auto& game = context->games.get(id);
+    Core::Player player = Core::Player::First;
 
-    if (game.board.is_terminal(game.player)) {
+    if (game.board().is_terminal(game.to_play())) {
       return Response{
           .id = id,
-          .board = game.board,
-          .player = game.player,
-          .result = game.board.get_result(game.player),
+          .board = game.board(),
+          .player = game.to_play(),
+          .result = game.board().get_result(player),
       };
     };
 
-    auto [player, board] =
-        game.board.apply(game.player, Core::ActionId{request.cell});
+    game.apply(Core::ActionId{request.cell});
 
-    if (not game.board.is_terminal(player)) {
+    if (not game.is_terminal()) {
       auto mcts = Core::MCTS(context->trainer->config);
       auto root_id =
-          mcts.run(player, game.board, context->trainer->networks.get_latest());
+          mcts.run(game.to_play(), game.board(), game.history_size(), context->trainer->networks.get_latest());
       auto action = mcts.nodes().get(root_id).action_taken;
-      std::tie(player, board) = game.board.apply(player, action);
+      game.apply(action);
     }
-
-    game.board = board;
-    game.player = player;
 
     return Response{
         .id = id,
-        .board = board,
-        .player = player,
-        .result = board.get_result(Core::Player::First),
+        .board = game.board(),
+        .player = game.to_play(),
+        .result = game.board().get_result(player),
     };
   }
 };
