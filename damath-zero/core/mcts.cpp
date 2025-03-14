@@ -15,9 +15,9 @@ auto MCTS::backpropagate(std::span<NodeId> path, f64 value, Player player)
     node.visit_count += 1;
 
     if (node.played_by == player) {
-      node.value_sum += value;
-    } else {
       node.value_sum += (1 - value);
+    } else {
+      node.value_sum += value;
     }
   }
 }
