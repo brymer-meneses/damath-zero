@@ -57,7 +57,9 @@ auto Board::apply(Core::Player player, Core::ActionId id)
   return {player.next(), Board(data)};
 }
 
-auto Board::get_feature(Core::Player) const -> torch::Tensor {
+auto Board::get_feature(Core::Player player) const -> torch::Tensor {
+  if (player == Core::Player::Second)
+    return -torch::from_blob(const_cast<i8*>(data.data()), {9});
   return torch::from_blob(const_cast<i8*>(data.data()), {9});
 }
 

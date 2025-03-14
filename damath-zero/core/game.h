@@ -99,9 +99,7 @@ auto Game<Board>::get_value(StateIndex state_index) const -> torch::Tensor {
 
 template <Concepts::Board Board>
 auto Game<Board>::get_feature(StateIndex state_index) const -> torch::Tensor {
-  auto index =
-      state_index.is_last() ? history_.size() - 1 : state_index.value();
-  const auto [to_play, board] = history_[index];
+  const auto [to_play, board] = history_[state_index.value()];
   return board.get_feature(to_play);
 }
 
