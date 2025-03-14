@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <memory>
 #include <print>
 
 #include "damath-zero/core/board.h"
@@ -26,7 +27,8 @@ class Actor {
   auto run() -> void;
 
  private:
-  auto generate_self_play_data(Concepts::Network auto& network) -> void;
+  template <Concepts::Network AnyNetwork>
+  auto generate_self_play_data(std::shared_ptr<AnyNetwork> network) -> void;
 
  private:
   NetworkStorage<Network>& networks_;
@@ -37,8 +39,9 @@ class Actor {
 };
 
 template <Concepts::Board Board, Concepts::Network Network>
+template <Concepts::Network AnyNetwork>
 auto Actor<Board, Network>::generate_self_play_data(
-    Concepts::Network auto& network) -> void {
+    std::shared_ptr<AnyNetwork> network) -> void {
   mcts_.reset();
 
   Game<Board> game;
@@ -57,8 +60,7 @@ template <Concepts::Board Board, Concepts::Network Network>
 auto Actor<Board, Network>::run() -> void {
   while (not should_terminate_) {
     if (networks_.empty()) {
-      UniformNetwork network;
-      generate_self_play_data(network);
+      generate_self_play_data(std::make_shared<UniformNetwork>());
       continue;
     }
 

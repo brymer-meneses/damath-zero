@@ -17,8 +17,8 @@ class MCTS {
  public:
   MCTS(Config config) : config_(config) {}
 
-  auto run(Player previous_player, Concepts::Board auto board,
-           Concepts::Network auto network) -> NodeId;
+  template <Concepts::Board Board, Concepts::Network Network>
+  auto run(Player previous_player, Board board, std::shared_ptr<Network> network) -> NodeId;
 
   constexpr auto reset() -> void { nodes_.clear(); }
 
@@ -32,7 +32,7 @@ class MCTS {
   auto backpropagate(std::span<NodeId> path, f64 value, Player player) -> void;
 
   template <Concepts::Board Board, Concepts::Network Network>
-  auto expand_node(NodeId node, Player player, Board board, Network network)
+  auto expand_node(NodeId node, Player player, Board board, std::shared_ptr<Network> network)
       -> f64;
 
  private:
@@ -40,8 +40,8 @@ class MCTS {
   Config config_;
 };
 
-auto MCTS::run(Player player, Concepts::Board auto board,
-               Concepts::Network auto network) -> NodeId {
+template <Concepts::Board Board, Concepts::Network Network>
+auto MCTS::run(Player player, Board board, std::shared_ptr<Network> network) -> NodeId {
   torch::NoGradGuard guard;
 
   auto root_id = nodes_.create(0.0);
@@ -72,8 +72,8 @@ auto MCTS::run(Player player, Concepts::Board auto board,
 
 template <Concepts::Board Board, Concepts::Network Network>
 auto MCTS::expand_node(NodeId node_id, Player player, Board board,
-                       Network network) -> f64 {
-  auto [value, policy] = network.forward(board.get_feature(player));
+                       std::shared_ptr<Network> network) -> f64 {
+  auto [value, policy] = network->forward(board.get_feature(player));
   auto legal_actions = board.get_legal_actions(player);
 
   // Create a boolean mask for legal actions

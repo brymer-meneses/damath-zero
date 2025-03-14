@@ -17,7 +17,7 @@ using namespace DamathZero::Core;
 TEST(MCTS, ExpandNode) {
   Config config;
   Board board;
-  UniformNetwork network;
+  auto network= std::make_shared<UniformNetwork>();
   Player player = Player::First;
 
   MCTS mcts(config);

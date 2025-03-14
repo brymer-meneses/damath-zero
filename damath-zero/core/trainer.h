@@ -54,9 +54,9 @@ auto Trainer<Board, Network>::train_network() -> void {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
-  Network network;
+  std::shared_ptr<Network> network = std::make_shared<Network>();
 
-  torch::optim::Adam optimizer(network.parameters());
+  torch::optim::Adam optimizer(network->parameters());
   torch::optim::ReduceLROnPlateauScheduler scheduler(
       optimizer, torch::optim::ReduceLROnPlateauScheduler::min, 0.5, 5, 0.0001,
       torch::optim::ReduceLROnPlateauScheduler::rel, 0, {0.0}, 1e-08, true);
@@ -66,7 +66,7 @@ auto Trainer<Board, Network>::train_network() -> void {
 
   auto device = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
-  network.to(device);
+  network->to(device);
   value_criterion->to(device);
   policy_criterion->to(device);
 
@@ -74,12 +74,12 @@ auto Trainer<Board, Network>::train_network() -> void {
     if (i % config.checkpoint_interval == 0)
       networks.save(i, network);
 
-    network.train();
+    network->train();
     auto train_loss = torch::tensor(0.0);
 
     auto [input_features, target_values, target_policies] =
         replay_buffer.sample_batch();
-    auto [values, policies] = network.forward(input_features);
+    auto [values, policies] = network->forward(input_features);
 
     assert(values.dim() == target_values.dim());
     assert(policies.dim() == target_policies.dim());
