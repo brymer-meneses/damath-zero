@@ -26,10 +26,6 @@ class MCTS {
   constexpr auto nodes() const -> NodeStorage const& { return nodes_; }
   constexpr auto nodes() -> NodeStorage& { return nodes_; };
 
-  template <Concepts::Board Board, Concepts::Network Network>
-  auto simulate(NodeId root_id, Player player, Board board,
-                std::shared_ptr<Network> network) -> void;
-
   auto select_highest_puct_score(NodeId parent) const -> NodeId;
   auto select_highest_visit_count(NodeId parent, i32 game_history_size) const
       -> NodeId;
@@ -61,19 +57,18 @@ auto MCTS::run(Player player, Board board, i32 game_history_size,
   for (auto i = 0; i < config_.num_simulations; i++) {
     std::vector<NodeId> path = {root_id};
     auto node_id = root_id;
+    auto scratch_board = board;
+    auto scratch_player = player;
 
     while (nodes_.get(node_id).is_expanded()) {
       node_id = select_highest_puct_score(node_id);
       auto action_id = nodes_.get(node_id).action_taken;
-      auto [new_player, new_board] = board.apply(player, action_id);
-      board = new_board;
-      player = new_player;
-
+      std::tie(scratch_player, scratch_board) = board.apply(player, action_id);
       path.push_back(node_id);
     }
 
-    auto value = expand_node(node_id, player, board, network);
-    backpropagate(path, value, player);
+    auto value = expand_node(node_id, scratch_player, scratch_board, network);
+    backpropagate(path, value, scratch_player);
   }
 
   return select_highest_visit_count(root_id, game_history_size);
