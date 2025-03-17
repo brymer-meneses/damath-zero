@@ -3,6 +3,7 @@
 #include <torch/torch.h>
 
 #include <glaze/glaze.hpp>
+#include <mutex>
 #include <vector>
 
 #include "damath-zero/base/id.h"
@@ -162,19 +163,17 @@ template <Concepts::Board Board>
 auto ReplayBuffer<Board>::save_game(Game game) -> void {
   assert(game.history_size() > 0);
 
-  mutex_.lock();
+  std::lock_guard lock(mutex_);
   games_.push_back(std::move(game));
-  mutex_.unlock();
 };
 
 template <Concepts::Board Board>
 auto ReplayBuffer<Board>::sample_batch() const -> Batch {
-  mutex_.lock();
+  std::lock_guard lock(mutex_);
   auto history_sizes = games_ | std::views::transform([](const auto& game) {
                          return game.history_size();
                        }) |
                        std::ranges::to<std::vector<i64>>();
-  mutex_.unlock();
 
   auto history_sizes_tensor = torch::tensor(history_sizes, torch::kInt64);
   auto probabilities = history_sizes_tensor.to(torch::kFloat64) /

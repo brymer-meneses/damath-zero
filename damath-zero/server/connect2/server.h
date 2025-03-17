@@ -5,34 +5,35 @@
 #include <glaze/ext/jsonrpc.hpp>
 #include <glaze/util/expected.hpp>
 #include <memory>
+#include <print>
 
 #include "damath-zero/base/storage.h"
 #include "damath-zero/base/types.h"
 #include "damath-zero/core/config.h"
 #include "damath-zero/core/mcts.h"
 #include "damath-zero/core/trainer.h"
-#include "damath-zero/games/tictactoe/board.h"
-#include "damath-zero/games/tictactoe/network.h"
+#include "damath-zero/games/connect2/board.h"
+#include "damath-zero/games/connect2/network.h"
 #include "damath-zero/server/rpc.h"
 
-namespace DamathZero::Games::TicTacToe {
+namespace DamathZero::Games::Connect2 {
 
 struct GameId : Base::Id {
   using Id::Id;
 };
 
-struct GameStorage : Base::Storage<GameId, Core::Game<TicTacToe::Board>> {
+struct GameStorage : Base::Storage<GameId, Core::Game<Connect2::Board>> {
   using Storage::Storage;
 };
 
 struct Context {
   GameStorage games;
-  std::shared_ptr<Core::Trainer<TicTacToe::Board, TicTacToe::Network>> trainer;
+  std::shared_ptr<Core::Trainer<Connect2::Board, Connect2::Network>> trainer;
 };
 
 struct Response {
   GameId id;
-  TicTacToe::Board board;
+  Connect2::Board board;
   Core::Player player;
   Core::GameResult result;
 };
@@ -109,8 +110,8 @@ struct Move {
 
     if (not game.is_terminal()) {
       auto mcts = Core::MCTS(context->trainer->config);
-      auto root_id =
-          mcts.run(game.to_play(), game.board(), game.history_size(), context->trainer->networks.get_latest());
+      auto root_id = mcts.run(game.to_play(), game.board(), game.history_size(),
+                              context->trainer->networks.get_latest());
       auto action = mcts.nodes().get(root_id).action_taken;
       game.apply(action);
     }
@@ -128,9 +129,9 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
   using Rpc::Rpc;
 
   Server(std::string_view hostname = "0.0.0.0", u16 port = 8080,
-         std::shared_ptr<Core::Trainer<TicTacToe::Board, TicTacToe::Network>>
+         std::shared_ptr<Core::Trainer<Connect2::Board, Connect2::Network>>
              trainer = std::make_shared<
-                 Core::Trainer<TicTacToe::Board, TicTacToe::Network>>(
+                 Core::Trainer<Connect2::Board, Connect2::Network>>(
                  Core::Config{}))
       : ws_{port, hostname.data()},
         trainer_(trainer),
@@ -165,14 +166,14 @@ struct Server : Rpc::Rpc<Context, New, Get, Move> {
 
  private:
   ix::WebSocketServer ws_;
-  std::shared_ptr<Core::Trainer<TicTacToe::Board, TicTacToe::Network>> trainer_;
+  std::shared_ptr<Core::Trainer<Connect2::Board, Connect2::Network>> trainer_;
 };
 
-}  // namespace DamathZero::Games::TicTacToe
+}  // namespace DamathZero::Games::Connect2
 
 template <>
-struct glz::meta<DamathZero::Games::TicTacToe::Response> {
-  using T = DamathZero::Games::TicTacToe::Response;
+struct glz::meta<DamathZero::Games::Connect2::Response> {
+  using T = DamathZero::Games::Connect2::Response;
   static constexpr auto value =
       object(&T::id, &T::board, &T::player, &T::result);
 };

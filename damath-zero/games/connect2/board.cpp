@@ -1,28 +1,19 @@
-#include "damath-zero/games/tictactoe/board.h"
+#include "damath-zero/games/connect2/board.h"
 
 #include <array>
 
 #include "damath-zero/core/board.h"
 
-using namespace DamathZero::Games::TicTacToe;
+using namespace DamathZero::Games::Connect2;
 using namespace DamathZero;
 
-static constexpr std::array<std::array<int, 3>, 8> win_conditions{{
-    {0, 1, 2},
-    {3, 4, 5},
-    {6, 7, 8},
-    {0, 3, 6},
-    {1, 4, 7},
-    {2, 5, 8},
-    {0, 4, 8},
-    {2, 4, 6},
-}};
+static constexpr std::array<std::array<int, 2>, 3> win_conditions{
+    {{0, 1}, {1, 2}, {2, 3}}};
 
 auto Board::get_result(Core::Player player) const -> Core::GameResult {
   auto did_win = [this](auto player) {
-    for (const auto& [x, y, z] : win_conditions) {
-      if (data[x] == data[y] and data[y] == data[z] and
-          data[x] == player.value())
+    for (const auto& [x, y] : win_conditions) {
+      if (data[x] == data[y] and data[x] == player.value())
         return true;
     }
 
@@ -43,8 +34,8 @@ auto Board::is_terminal(Core::Player) const -> bool {
   if (std::ranges::none_of(data, [](auto x) { return x == 0; }))
     return true;
 
-  for (const auto& [x, y, z] : win_conditions) {
-    if (data[x] == data[y] and data[y] == data[z] and data[x] != 0)
+  for (const auto& [x, y] : win_conditions) {
+    if (data[x] == data[y] and data[x] != 0)
       return true;
   }
 

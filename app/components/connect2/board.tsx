@@ -16,6 +16,8 @@ export default function Board({ id }: { id: number }) {
 
   if (!state) return <div>Loading...</div>;
 
+  console.log(state);
+
   const move = (cell: number) => {
     rpc.send("move", { id: state.id, cell });
   };
@@ -26,16 +28,14 @@ export default function Board({ id }: { id: number }) {
         {state.result === 0 && <div>Draw!</div>}
         {state.result === 1 && <div>X wins!</div>}
         {state.result === -1 && <div>O wins!</div>}
-        <NewGame />
+        <NewGame route="connect2" />
       </main>
     );
   }
 
-  console.log(state);
-
   return (
     <main className="flex flex-col justify-center items-center p-10">
-      <div className="grid grid-cols-3 w-full max-w-[50%] border-gray-200 border-2 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-4 w-full max-w-[50%] border-gray-200 border-2 rounded-lg overflow-hidden">
         {state.board?.map((cell, i) => {
           if (cell === 0) {
             return (
@@ -58,7 +58,7 @@ export default function Board({ id }: { id: number }) {
         })}
       </div>
 
-      <NewGame />
+      <NewGame route="connect2" />
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import Board from "@/components/tictactoe/board";
+import Board from "@/components/connect2/board";
 
 export default async function Page({
   params,

@@ -4,10 +4,10 @@ import { rpc } from "@/lib/rpc";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
 
-export function NewGame() {
+export function NewGame({ route }: { route: string }) {
   useEffect(() => {
     rpc.on("new", (state) => {
-      redirect(`/tictactoe/${state.id}`);
+      redirect(`/${route}/${state.id}`);
     });
   }, []);
 
