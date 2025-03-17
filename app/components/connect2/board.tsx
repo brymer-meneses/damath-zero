@@ -23,7 +23,7 @@ export default function Board({ id }: { id: number }) {
   };
 
   return (
-    <main className="flex flex-col justify-center items-center p-10">
+    <main className="flex flex-col justify-center items-center p-10 gap-4">
       {state.result === -2 && (
         <div>Player {state.player === "first" ? "X" : "O"} turn...</div>
       )}
