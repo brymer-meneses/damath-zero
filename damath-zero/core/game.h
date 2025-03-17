@@ -2,6 +2,7 @@
 
 #include <torch/torch.h>
 
+#include <deque>
 #include <glaze/glaze.hpp>
 #include <mutex>
 #include <vector>
@@ -144,9 +145,7 @@ class ReplayBuffer {
   using Game = Game<Board>;
 
  public:
-  constexpr ReplayBuffer(Config config) : config_(config) {
-    games_.reserve(config.buffer_size);
-  };
+  constexpr ReplayBuffer(Config config) : config_(config) {};
 
   auto save_game(Game game) -> void;
   auto sample_batch() const -> Batch;
@@ -156,14 +155,19 @@ class ReplayBuffer {
  private:
   mutable std::mutex mutex_;
   Config config_;
-  std::vector<Game> games_;
+  std::deque<Game> games_;
 };
 
 template <Concepts::Board Board>
 auto ReplayBuffer<Board>::save_game(Game game) -> void {
+  std::lock_guard lock(mutex_);
+
+  assert(game.is_terminal());
   assert(game.history_size() > 0);
 
-  std::lock_guard lock(mutex_);
+  if (games_.size() >= config_.buffer_size)
+    games_.pop_front();
+
   games_.push_back(std::move(game));
 };
 
@@ -192,6 +196,8 @@ auto ReplayBuffer<Board>::sample_batch() const -> Batch {
   for (auto i = 0; i < config_.batch_size; i++) {
     auto game_index = sampled_indices[i].template item<i64>();
     auto& game = games_[game_index];
+
+    assert(game.is_terminal());
     assert(game.history_size() > 0);
 
     auto random_position =

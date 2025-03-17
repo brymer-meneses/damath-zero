@@ -20,19 +20,14 @@ export default function Board({ id }: { id: number }) {
     rpc.send("move", { id: state.id, cell });
   };
 
-  if (state.result !== -2) {
-    return (
-      <main className="flex flex-col justify-center items-center p-10">
-        {state.result === 0 && <div>Draw!</div>}
-        {state.result === 1 && <div>X wins!</div>}
-        {state.result === -1 && <div>O wins!</div>}
-        <NewGame route="tictactoe" />
-      </main>
-    );
-  }
-
   return (
-    <main className="flex flex-col justify-center items-center p-10">
+    <main className="flex flex-col justify-center items-center p-10 gap-4">
+      {state.result === -2 && (
+        <div>Player {state.player === "first" ? "X" : "O"} turn...</div>
+      )}
+      {state.result === 0 && <div>Draw!</div>}
+      {state.result === 1 && <div>X wins!</div>}
+      {state.result === -1 && <div>O wins!</div>}
       <div className="grid grid-cols-3 w-full max-w-[50%] border-gray-200 border-2 rounded-lg overflow-hidden">
         {state.board?.map((cell, i) => {
           if (cell === 0) {
@@ -55,7 +50,6 @@ export default function Board({ id }: { id: number }) {
           }
         })}
       </div>
-
       <NewGame route="tictactoe" />
     </main>
   );

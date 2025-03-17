@@ -1,7 +1,7 @@
 export interface State {
   id: number;
   board: number[];
-  player: number;
+  player: string;
   result: number;
 }
 
